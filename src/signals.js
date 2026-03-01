@@ -525,6 +525,110 @@ const PostToastSignals = {
     return null;
   },
 
+  detectCopypasta(text) {
+    // Chain mail / viral stories reposted on LinkedIn
+    const patterns = [
+      /a (?:professor|teacher|ceo|boss|manager) (?:got up|stood up|walked in|said|asked)/i,
+      /(?:the (?:whole|entire) (?:class|room|office|team) (?:was|went) (?:silent|quiet))/i,
+      /(?:everybody|everyone) (?:clapped|stood up|cheered|applauded)/i,
+      /(?:that (?:student|employee|person|man|woman|kid)'s name\?)/i,
+      /(?:i love this|repost this|share this if)/i
+    ];
+    const hasNoOriginalContent = !/\b(?:I think|in my experience|at my company|my take|I believe)\b/i.test(text);
+    const matches = patterns.filter(p => p.test(text));
+
+    if (matches.length >= 2 || (matches.length >= 1 && hasNoOriginalContent && text.length > 200)) {
+      return { detected: true, points: 2.0, icon: '📋', label: 'Copypasta', detail: 'Chain-mail story reposted on a professional platform' };
+    }
+    return null;
+  },
+
+  detectAtFirstThenRealized(text) {
+    const patterns = [
+      /at first (?:i |I )?(?:thought|laughed|dismissed|ignored|didn't|was skeptical).{0,80}then (?:i |I )?(?:realized|understood|saw|noticed|got it)/i,
+      /(?:i used to think|i always thought).{0,80}(?:then i realized|until i learned|now i know)/i,
+      /(?:at first.{0,20}then.{0,20}(?:genius|brilliant|incredible|game.?changer))/i
+    ];
+
+    if (patterns.some(p => p.test(text))) {
+      return { detected: true, points: 1.0, icon: '💡', label: 'The Epiphany Arc', detail: '"At first I laughed. Then I realized..." — the LinkedIn two-step' };
+    }
+    return null;
+  },
+
+  detectOverworkBrag(text) {
+    const hourMatch = text.match(/(\d{2,3})\s*(?:hrs?|hours?)\s*(?:a |per |\/)?(?:week|wk)/i);
+    const patterns = [
+      /(?:i work|working|i put in|clocking|logged) \d{2,3}\s*(?:hrs?|hours?)/i,
+      /(?:4|5)\s*(?:am|a\.m\.)\s*(?:every|daily|morning|wake|alarm|start)/i,
+      /(?:no days off|no weekends|haven't taken a (?:day|vacation|break))/i,
+      /(?:sleep is|sleep when|who needs sleep|i'll sleep when i'm dead)/i,
+      /(?:while (?:you|they|everyone) (?:were |was )?(?:sleeping|partying|watching|relaxing))/i
+    ];
+
+    if (hourMatch && parseInt(hourMatch[1]) > 60) {
+      return { detected: true, points: 2.0, icon: '⏰', label: 'Overwork Bragging', detail: `Bragging about ${hourMatch[1]} hours/week like it's a flex, not a cry for help` };
+    }
+    if (patterns.filter(p => p.test(text)).length >= 2) {
+      return { detected: true, points: 1.5, icon: '⏰', label: 'Overwork Bragging', detail: 'Glorifying burnout as a personality trait' };
+    }
+    return null;
+  },
+
+  detectFacebookOnLinkedIn(text) {
+    // Non-professional content: politics, religion, memes, personal rants
+    const nonProfessional = [
+      /(?:god|jesus|lord|pray|prayer|blessed be|amen|scripture|bible|church)/i,
+      /(?:democrat|republican|liberal|conservative|trump|biden|maga|woke|libtard)/i,
+      /(?:like and share|share if you agree|type amen|1 like = 1 prayer)/i,
+      /(?:good morning linkedin|happy (?:monday|tuesday|wednesday|thursday|friday)|tgif|rise and grind)/i
+    ];
+    const noProfessionalContext = !/(?:company|industry|business|career|hire|job|team|project|product|customer|client|revenue|startup|market)/i.test(text);
+
+    const matches = nonProfessional.filter(p => p.test(text));
+    if (matches.length >= 1 && noProfessionalContext) {
+      return { detected: true, points: 1.25, icon: '👴', label: 'Facebook on LinkedIn', detail: 'This belongs on Facebook, not a professional network' };
+    }
+    return null;
+  },
+
+  detectDisproportionateGratitude(text) {
+    const bigThanks = /(?:can't thank|want to thank|grateful to|thankful for|shoutout to) (?:my |all |every |each )?(?:clients?|teammates?|partners?|family|friends|mentors?|colleagues?|network|community|everyone)/i.test(text);
+    const trivialEvent = /(?:vanity plate|new (?:phone|laptop|desk|office|badge|title card)|coffee|lunch|parking spot|business card|first day|started (?:a|my) (?:new|podcast|blog|newsletter))/i.test(text);
+
+    if (bigThanks && trivialEvent) {
+      return { detected: true, points: 1.25, icon: '🏆', label: 'Oscar Speech', detail: 'Thanking the entire professional ecosystem for a minor personal event' };
+    }
+    return null;
+  },
+
+  detectSelfFanFiction(text) {
+    // People writing fictional dialogues where they're the hero
+    const hasDialogue = (text.match(/[""].*?[""]|["'].*?["']/g) || []).length >= 2;
+    const hasReaction = /(?:shocked|stunned|speechless|couldn't believe|jaw dropped|eyes widened|went silent|was quiet)/i.test(text);
+    const selfHero = /(?:i (?:replied|said|told|responded|answered|looked|smiled))/i.test(text);
+    const coolDescriptor = /(?:without (?:batting|blinking|hesitating|missing)|calmly|confidently|simply said|just smiled)/i.test(text);
+
+    if (hasDialogue && hasReaction && selfHero) {
+      const pts = coolDescriptor ? 2.5 : 2.0;
+      return { detected: true, points: pts, icon: '📖', label: 'Self Fan Fiction', detail: coolDescriptor ? 'Writing yourself as the cool genius who shocks everyone — and narrating your own composure' : 'A fictional dialogue where you\'re the hero who stuns the room' };
+    }
+    return null;
+  },
+
+  detectItsCrazyToMe(text) {
+    const patterns = [
+      /(?:it's|it is) (?:crazy|wild|insane|mind.?blowing|fascinating|incredible|unbelievable) (?:to me )?(?:that|how)/i,
+      /(?:can we talk about|nobody is talking about|why isn't anyone|am i the only one who)/i,
+      /(?:let that sink in|read that again|say it louder|think about that)/i
+    ];
+
+    if (patterns.some(p => p.test(text))) {
+      return { detected: true, points: 0.75, icon: '🤯', label: 'Performative Amazement', detail: 'Pretending to be blown away by an obvious observation' };
+    }
+    return null;
+  },
+
   detectLinkedInness(text) {
     // Base "LinkedIn energy" — long posts that read like a performance
     const words = text.split(/\s+/).length;
@@ -626,6 +730,9 @@ const PostToastSignals = {
       'detectDramaticBreaks', 'detectHashtagSpam', 'detectCorporateHaiku', 'detectSelfieSermon',
       'detectRecruiterBait', 'detectLinkedInness', 'detectInfomercial',
       'detectFortuneCookie', 'detectLetterCloser', 'detectThirdPersonSelfPromo',
+      'detectCopypasta', 'detectAtFirstThenRealized', 'detectOverworkBrag',
+      'detectFacebookOnLinkedIn', 'detectDisproportionateGratitude',
+      'detectSelfFanFiction', 'detectItsCrazyToMe',
       // Negative
       'detectHasLinks', 'detectHasCode', 'detectShortFactual', 'detectSharesOthers'
     ];
