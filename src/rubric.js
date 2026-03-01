@@ -33,10 +33,10 @@ const PostToastRubric = {
 
   // Tier 2: Core Cringe
   tier2: {
-    humbleBrag: { points: 1.5, icon: '🙏', label: 'Humble Brag' },
-    thoughtLeader: { points: 1.25, icon: '🎪', label: 'Thought Leader Cosplay' },
-    engagementBait: { points: 1.0, icon: '🎣', label: 'Agreephishing' },
-    toxicPositivity: { points: 1.0, icon: '🌈', label: 'Toxic Positivity' },
+    humbleBrag: { points: 2.0, icon: '🙏', label: 'Humble Brag' },
+    thoughtLeader: { points: 1.75, icon: '🎪', label: 'Thought Leader Cosplay' },
+    engagementBait: { points: 1.5, icon: '🎣', label: 'Agreephishing' },
+    toxicPositivity: { points: 1.5, icon: '🌈', label: 'Toxic Positivity' },
     nameDrop: { points: 1.0, icon: '📛', label: 'Name Dropping' },
     selflessHiring: { points: 1.25, icon: '🦸', label: 'Selfless Hiring Post' },
     garySpeech: { points: 1.0, icon: '🎤', label: 'Hustle Porn' },
@@ -52,11 +52,11 @@ const PostToastRubric = {
   // Tier 3: Seasoning
   tier3: {
     emojiAbuse: { points: 0.75, icon: '😬', label: 'Emoji Abuse' },
-    broetry: { points: 1.0, icon: '📝', label: 'Broetry' },
-    corporateJargon: { points: 0.75, icon: '💼', label: 'Corporate Jargon' },
-    narcissismIndex: { points: 0.75, icon: '🪞', label: 'Narcissism Index' },
-    dramaticBreaks: { points: 0.5, icon: '⏸️', label: 'Dramatic Line Breaks' },
-    hashtagSpam: { points: 0.5, icon: '#️⃣', label: 'Hashtag Spam' },
+    broetry: { points: 1.5, icon: '📝', label: 'Broetry' },
+    corporateJargon: { points: 1.0, icon: '💼', label: 'Corporate Jargon' },
+    narcissismIndex: { points: 1.0, icon: '🪞', label: 'Narcissism Index' },
+    dramaticBreaks: { points: 0.75, icon: '⏸️', label: 'Dramatic Line Breaks' },
+    hashtagSpam: { points: 0.75, icon: '#️⃣', label: 'Hashtag Spam' },
     corporateHaiku: { points: 0.75, icon: '🏯', label: 'Corporate Haiku' },
     selfiSermon: { points: 0.5, icon: '🤳', label: 'Selfie Sermon' },
     recruiterBait: { points: 0.5, icon: '🎯', label: 'Recruiter Bait' }
@@ -90,16 +90,16 @@ const PostToastRubric = {
   },
 
   // Compound multiplier: when 3+ Tier 2 signals stack
-  compoundThreshold: 3,
-  compoundMultiplier: 1.25,
+  compoundThreshold: 2,
+  compoundMultiplier: 1.3,
 
   // Thresholds
   thresholds: {
-    emojiDensity: 0.03,       // emojis per character
-    narcissismDensity: 0.06,  // I/me/my per word
-    broetryRatio: 0.6,        // % of paragraphs that are single sentences
-    hashtagCount: 3,          // hashtags to trigger
+    emojiDensity: 0.015,      // emojis per character (loosened)
+    narcissismDensity: 0.04,  // I/me/my per word (loosened)
+    broetryRatio: 0.45,       // % of paragraphs that are single sentences (loosened)
+    hashtagCount: 2,          // hashtags to trigger (was 3)
     shortPostLength: 100,     // chars for "short factual"
-    jargonCount: 3            // jargon words to trigger
+    jargonCount: 2            // jargon words to trigger (was 3)
   }
 };

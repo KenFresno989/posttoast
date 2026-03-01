@@ -460,6 +460,45 @@ const PostToastSignals = {
     return null;
   },
 
+  detectLinkedInness(text) {
+    // Base "LinkedIn energy" — long posts that read like a performance
+    const words = text.split(/\s+/).length;
+    const lines = text.split('\n').filter(l => l.trim().length > 0).length;
+    let pts = 0;
+    const reasons = [];
+
+    // Long post (200+ words) that's not technical
+    if (words > 200 && !/(?:```|function |const |import |class )/i.test(text)) {
+      pts += 0.5;
+      reasons.push('200+ word monologue');
+    }
+
+    // Exclamation point abuse
+    const exclamations = (text.match(/!/g) || []).length;
+    if (exclamations >= 3) {
+      pts += 0.25;
+      reasons.push(`${exclamations} exclamation points`);
+    }
+
+    // ALL CAPS words (3+)
+    const capsWords = (text.match(/\b[A-Z]{3,}\b/g) || []).filter(w => !['CEO', 'CTO', 'CFO', 'COO', 'CMO', 'VP', 'MBA', 'USA', 'LLC', 'INC', 'ROI', 'KPI', 'SaaS', 'API', 'HR', 'DEI', 'AI', 'ML'].includes(w));
+    if (capsWords.length >= 2) {
+      pts += 0.25;
+      reasons.push(`${capsWords.length} SHOUTING words`);
+    }
+
+    // Ends with a question (engagement hook)
+    if (/\?\s*$/.test(text.trim())) {
+      pts += 0.25;
+      reasons.push('Ends with a question hook');
+    }
+
+    if (pts > 0) {
+      return { detected: true, points: pts, icon: '📡', label: 'LinkedIn Energy', detail: reasons.join(' · ') };
+    }
+    return null;
+  },
+
   // ========== NEGATIVE SIGNALS ==========
 
   detectHasLinks(text) {
@@ -520,7 +559,7 @@ const PostToastSignals = {
       // Tier 3
       'detectEmojiAbuse', 'detectBroetry', 'detectCorporateJargon', 'detectNarcissismIndex',
       'detectDramaticBreaks', 'detectHashtagSpam', 'detectCorporateHaiku', 'detectSelfieSermon',
-      'detectRecruiterBait',
+      'detectRecruiterBait', 'detectLinkedInness',
       // Negative
       'detectHasLinks', 'detectHasCode', 'detectShortFactual', 'detectSharesOthers'
     ];
