@@ -4,7 +4,7 @@
 .pt-badge {
   position: absolute;
   top: 12px;
-  right: 12px;
+  right: 56px;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -52,7 +52,7 @@
 .pt-breakdown {
   position: absolute;
   top: 44px;
-  right: 12px;
+  right: 56px;
   width: 340px;
   max-width: calc(100vw - 48px);
   background: #1a1a2e;
