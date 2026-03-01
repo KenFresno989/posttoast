@@ -124,11 +124,16 @@ const PostToastSignals = {
       /agree\s*\??\s*(?:👇|⬇️|↓|drop|comment|share|repost)/i,
       /(?:thoughts|agree|disagree)\s*\?\s*(?:👇|⬇️)?/i,
       /(?:drop|leave|put) a (?:🔥|❤️|👍|💡|✋|comment|like)/i,
-      /(?:repost|share|like) if you (?:agree|believe|think|feel)/i,
+      /(?:repost|share|like) if you (?:agree|believe|think|feel|found)/i,
       /(?:who else|am i the only|raise your hand|tag someone)/i,
       /(?:comment|type) (?:yes|no|me|below|👇)/i,
       /what (?:do you|would you) think\s*\?\s*$/im,
-      /follow (?:me |for )(?:more|daily|weekly)/i
+      /follow (?:me|for )(?:more|so you|daily|weekly|to never miss)/i,
+      /(?:never miss|don't miss) (?:content|posts|updates|a post)/i,
+      /comment .{0,20} below/i,
+      /(?:send|dm|message) (?:me|directly)/i,
+      /want (?:the|my|a) (?:full|complete|free) (?:guide|template|checklist|playbook|framework)/i,
+      /(?:save|bookmark) this (?:for|post)/i
     ];
 
     const matches = patterns.filter(p => p.test(text));
@@ -414,6 +419,18 @@ const PostToastSignals = {
     return null;
   },
 
+  detectInfomercial(text) {
+    const educationalFrame = /(?:most people|here'?s (?:what|how|why|a)|let me (?:break|explain)|primer on|guide to|questions i get asked|complete guide)/i.test(text);
+    const selfPromo = /(?:visit my|my website|check out my|i built|i created|my company|my firm|my team|we help|we offer|our platform|book a call|schedule a|link in)/i.test(text);
+    const leadGen = /(?:comment .{0,20}(?:below|and i'll)|dm me|send me|want (?:the|my|a) (?:full|free)|get (?:the|my|your) (?:free|full))/i.test(text);
+
+    const signals = [educationalFrame, selfPromo, leadGen].filter(Boolean).length;
+    if (signals >= 2) {
+      return { detected: true, points: 1.5, icon: '📺', label: 'Infomercial', detail: 'Education-shaped ad — "But wait, there\'s more!"' };
+    }
+    return null;
+  },
+
   // ========== NEW TIER 3 SIGNALS ==========
 
   detectCorporateHaiku(text) {
@@ -559,7 +576,7 @@ const PostToastSignals = {
       // Tier 3
       'detectEmojiAbuse', 'detectBroetry', 'detectCorporateJargon', 'detectNarcissismIndex',
       'detectDramaticBreaks', 'detectHashtagSpam', 'detectCorporateHaiku', 'detectSelfieSermon',
-      'detectRecruiterBait', 'detectLinkedInness',
+      'detectRecruiterBait', 'detectLinkedInness', 'detectInfomercial',
       // Negative
       'detectHasLinks', 'detectHasCode', 'detectShortFactual', 'detectSharesOthers'
     ];

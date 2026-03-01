@@ -106,12 +106,36 @@ const PostToastBreakdown = {
         <span>Total</span>
         <span class="pt-total-score ${PostToastScorer.getColorClass(result.score)}">${scoreDisplay} / 10</span>
       </div>
+      <div class="pt-share-row">
+        <button class="pt-share-btn" id="pt-share-${Date.now()}">📋 Copy Roast</button>
+      </div>
       <div class="pt-breakdown-footer">
         🍞 PostToast — Roasting LinkedIn, one post at a time
       </div>
     `;
 
     panel.innerHTML = html;
+
+    // Share button handler
+    const shareBtn = panel.querySelector('.pt-share-btn');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const signalList = result.signals.map(s => `${s.icon} ${s.label}: +${s.points}`).join('\n');
+        const roast = PostToastRubric.getRoastHeadline(result.score);
+        const scoreDisplay = result.score % 1 === 0 ? result.score.toFixed(0) : result.score.toFixed(result.score % 0.5 === 0 ? 1 : 2);
+        const text = `🍞 PostToast Score: ${scoreDisplay}/10 — "${roast}"\n\n${signalList}\n\nposttoast.app`;
+        navigator.clipboard.writeText(text).then(() => {
+          shareBtn.textContent = 'Copied! 🍞';
+          shareBtn.classList.add('pt-copied');
+          setTimeout(() => {
+            shareBtn.textContent = '📋 Copy Roast';
+            shareBtn.classList.remove('pt-copied');
+          }, 2000);
+        });
+      });
+    }
+
     return panel;
   }
 };
