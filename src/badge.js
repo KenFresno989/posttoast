@@ -36,35 +36,27 @@ const PostToastBadge = {
     if (this.isScored(postElement)) return;
 
     const badge = this.create(result, postElement);
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position: relative; display: inline-flex;';
+    wrapper.appendChild(badge);
 
-    // Try to place in the social action bar (Like/Comment/Repost/Send)
-    const actionBar = postElement.querySelector('.social-details-social-actions') 
-      || postElement.querySelector('.feed-shared-social-actions')
-      || postElement.querySelector('[class*="social-action"]');
+    // Strategy: place after the actor/header section so it's visible at top of post
+    const header = postElement.querySelector('.feed-shared-actor')
+      || postElement.querySelector('.update-components-actor')
+      || postElement.querySelector('[class*="actor"]');
 
-    if (actionBar) {
-      // Wrap badge in a relative container for breakdown positioning
-      const wrapper = document.createElement('div');
-      wrapper.style.cssText = 'position: relative; display: inline-flex; align-items: center; margin-left: auto;';
-      wrapper.appendChild(badge);
-      actionBar.appendChild(wrapper);
+    if (header) {
+      // Insert a row right after the header
+      const row = document.createElement('div');
+      row.style.cssText = 'display: flex; justify-content: flex-end; padding: 4px 16px 0; position: relative;';
+      row.appendChild(wrapper);
+      header.insertAdjacentElement('afterend', row);
     } else {
-      // Fallback: put it after the post header area
-      const header = postElement.querySelector('.feed-shared-actor')
-        || postElement.querySelector('[class*="actor"]')
-        || postElement.querySelector('.update-components-actor');
-
-      if (header) {
-        const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'position: relative; display: inline-flex; float: right; margin: 8px 12px 0 0;';
-        wrapper.appendChild(badge);
-        header.parentElement.insertBefore(wrapper, header.nextSibling);
-      } else {
-        // Last resort: absolute position in corner
-        badge.style.cssText += 'position: absolute; top: 12px; right: 56px;';
-        postElement.style.position = 'relative';
-        postElement.appendChild(badge);
-      }
+      // Fallback: prepend to the post as a floating badge
+      const row = document.createElement('div');
+      row.style.cssText = 'display: flex; justify-content: flex-end; padding: 4px 16px 0; position: relative;';
+      row.appendChild(wrapper);
+      postElement.prepend(row);
     }
 
     this.markScored(postElement);
