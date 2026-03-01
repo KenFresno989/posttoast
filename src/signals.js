@@ -629,6 +629,101 @@ const PostToastSignals = {
     return null;
   },
 
+  detectAISlop(text) {
+    const lower = text.toLowerCase();
+    let score = 0;
+    const evidence = [];
+
+    // Vocabulary tells — words AI overuses
+    const slopWords = [
+      'delve', 'navigate', 'landscape', 'foster', 'resonate', 'crucial',
+      'realm', 'embark', 'pivotal', 'nuanced', 'multifaceted', 'holistic',
+      'paradigm', 'transformative', 'utilize', 'leverage', 'harness',
+      'testament', 'underscores', 'aforementioned', 'comprehensive',
+      'robust', 'streamline', 'spearhead', 'groundbreaking', 'cutting-edge',
+      'ever-evolving', 'fast-paced', 'dynamic', 'innovative', 'elevate'
+    ];
+    const foundSlop = slopWords.filter(w => lower.includes(w));
+    if (foundSlop.length >= 3) {
+      score += 1.0;
+      evidence.push(`${foundSlop.length} AI-favorite words: "${foundSlop.slice(0, 3).join('", "')}"...`);
+    } else if (foundSlop.length >= 2) {
+      score += 0.5;
+      evidence.push(`AI vocabulary: "${foundSlop.join('", "')}""`);
+    }
+
+    // Structural tells
+    const hasNumberedBoldList = /\d+\.\s*\*\*[^*]+\*\*/g.test(text) || /\d+\.\s+[A-Z][^.]{5,40}:/g.test(text);
+    if (hasNumberedBoldList) {
+      score += 0.5;
+      evidence.push('Numbered bold-header list');
+    }
+
+    // "Here's the thing:" / "Let me be clear:" / "Here's why this matters:"
+    const aiTransitions = [
+      /here'?s (?:the thing|why (?:this|it|that) matters|what i'?ve learned)/i,
+      /let me be (?:clear|honest|real|transparent)/i,
+      /(?:the bottom line|at the end of the day|the reality is)/i,
+      /(?:it'?s not (?:just )?about .{5,40}, it'?s about)/i
+    ];
+    const transitionMatches = aiTransitions.filter(p => p.test(text));
+    if (transitionMatches.length >= 2) {
+      score += 0.75;
+      evidence.push('Multiple AI-style transitions');
+    } else if (transitionMatches.length === 1) {
+      score += 0.25;
+    }
+
+    // "In today's [noun]" opening
+    if (/^in today'?s (?:world|landscape|economy|market|era|age|environment|climate)/im.test(text)) {
+      score += 0.5;
+      evidence.push('"In today\'s [landscape]" — the classic AI opener');
+    }
+
+    // Em dash abuse (AI loves em dashes)
+    const emDashes = (text.match(/—|--/g) || []).length;
+    if (emDashes >= 4) {
+      score += 0.5;
+      evidence.push(`${emDashes} em dashes — AI's favorite punctuation`);
+    }
+
+    // Excessive hedging
+    const hedges = [
+      /while (?:it'?s|this is) (?:true|important|valid|understandable)/i,
+      /(?:that said|having said that|that being said|with that in mind)/i,
+      /(?:it'?s (?:important|worth|crucial|essential) to (?:note|remember|acknowledge|recognize))/i
+    ];
+    const hedgeCount = hedges.filter(p => p.test(text)).length;
+    if (hedgeCount >= 2) {
+      score += 0.5;
+      evidence.push('Excessive hedging — unnaturally balanced');
+    }
+
+    // Zero typos + uniform paragraph length (AI tell)
+    const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 20);
+    if (paragraphs.length >= 3) {
+      const lengths = paragraphs.map(p => p.trim().length);
+      const avg = lengths.reduce((a, b) => a + b, 0) / lengths.length;
+      const variance = lengths.reduce((sum, l) => sum + Math.pow(l - avg, 2), 0) / lengths.length;
+      const cv = Math.sqrt(variance) / avg; // coefficient of variation
+      if (cv < 0.25) { // very uniform paragraph lengths
+        score += 0.5;
+        evidence.push('Suspiciously uniform paragraph lengths');
+      }
+    }
+
+    // "What do you think?" as closer (AI's favorite ending)
+    if (/what (?:do you|are your|would you) (?:think|thoughts)\s*\??\s*$/im.test(text)) {
+      score += 0.25;
+      evidence.push('"What do you think?" — AI\'s go-to closer');
+    }
+
+    if (score >= 1.5) {
+      return { detected: true, points: Math.min(score, 3.0), icon: '🤖', label: 'AI Slop', detail: evidence.join(' · ') };
+    }
+    return null;
+  },
+
   detectLinkedInness(text) {
     // Base "LinkedIn energy" — long posts that read like a performance
     const words = text.split(/\s+/).length;
@@ -732,7 +827,7 @@ const PostToastSignals = {
       'detectFortuneCookie', 'detectLetterCloser', 'detectThirdPersonSelfPromo',
       'detectCopypasta', 'detectAtFirstThenRealized', 'detectOverworkBrag',
       'detectFacebookOnLinkedIn', 'detectDisproportionateGratitude',
-      'detectSelfFanFiction', 'detectItsCrazyToMe',
+      'detectSelfFanFiction', 'detectItsCrazyToMe', 'detectAISlop',
       // Negative
       'detectHasLinks', 'detectHasCode', 'detectShortFactual', 'detectSharesOthers'
     ];
