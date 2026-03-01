@@ -356,7 +356,11 @@ const PostToastSignals = {
 
     if (ratio >= PostToastRubric.thresholds.broetryRatio && lines.length >= 5) {
       const r = PostToastRubric.tier3.broetry;
-      return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: `${singleSentenceLines.length} of ${lines.length} lines are single-sentence paragraphs` };
+      // Scale points for extreme broetry
+      let pts = r.points;
+      if (ratio >= 0.9) pts += 1.0;       // 90%+ single sentences = extra cringe
+      else if (ratio >= 0.7) pts += 0.5;  // 70%+ gets a bump
+      return { detected: true, points: pts, icon: r.icon, label: r.label, detail: `${singleSentenceLines.length} of ${lines.length} lines are single-sentence paragraphs` };
     }
     return null;
   },
@@ -477,6 +481,50 @@ const PostToastSignals = {
     return null;
   },
 
+  detectFortuneCookie(text) {
+    // Short profound-sounding one-liners that say nothing
+    const lines = text.split('\n').filter(l => l.trim().length > 0);
+    const fortuneCookies = lines.filter(l => {
+      const trimmed = l.trim();
+      const words = trimmed.split(/\s+/).length;
+      // Short declarative statements (3-8 words) that sound profound
+      return words >= 2 && words <= 8 && !trimmed.includes('?') &&
+        /(?:create|is |are |build|attract|matter|define|start|change|grow|transform|begin|deserve)/i.test(trimmed);
+    });
+
+    if (fortuneCookies.length >= 3) {
+      return { detected: true, points: 1.0, icon: '🥠', label: 'Fortune Cookie', detail: `${fortuneCookies.length} profound-sounding one-liners that say nothing` };
+    }
+    return null;
+  },
+
+  detectLetterCloser(text) {
+    const patterns = [
+      /(?:love|cheers|warmly|best|regards|gratitude|yours|sincerely|peace),?\s*\n/i,
+      /(?:love & gratitude|with love|with gratitude|stay blessed|keep going),?\s*\n?\s*[A-Z][a-z]+\s*$/im,
+      /(?:love|cheers|warmly|best|gratitude),?\s+[A-Z][a-z]+\s*$/im
+    ];
+
+    if (patterns.some(p => p.test(text))) {
+      return { detected: true, points: 0.75, icon: '✍️', label: 'Letter Closer', detail: 'Signing a LinkedIn post like a handwritten letter to thousands' };
+    }
+    return null;
+  },
+
+  detectThirdPersonSelfPromo(text) {
+    // "Follow [Name] for actionable insights"
+    const patterns = [
+      /follow \w+ (?:\w+ )?for (?:more|daily|actionable|weekly|the latest|insights|tips|content)/i,
+      /connect with \w+ (?:\w+ )?(?:to learn|for|on)/i,
+      /subscribe to \w+(?:'s)? (?:newsletter|channel|podcast)/i
+    ];
+
+    if (patterns.some(p => p.test(text))) {
+      return { detected: true, points: 1.25, icon: '🗣️', label: 'Third Person Main Character', detail: 'Referring to yourself in third person to sell yourself' };
+    }
+    return null;
+  },
+
   detectLinkedInness(text) {
     // Base "LinkedIn energy" — long posts that read like a performance
     const words = text.split(/\s+/).length;
@@ -577,6 +625,7 @@ const PostToastSignals = {
       'detectEmojiAbuse', 'detectBroetry', 'detectCorporateJargon', 'detectNarcissismIndex',
       'detectDramaticBreaks', 'detectHashtagSpam', 'detectCorporateHaiku', 'detectSelfieSermon',
       'detectRecruiterBait', 'detectLinkedInness', 'detectInfomercial',
+      'detectFortuneCookie', 'detectLetterCloser', 'detectThirdPersonSelfPromo',
       // Negative
       'detectHasLinks', 'detectHasCode', 'detectShortFactual', 'detectSharesOthers'
     ];
