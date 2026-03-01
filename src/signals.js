@@ -134,7 +134,8 @@ const PostToastSignals = {
       /comment .{0,20} below/i,
       /(?:send|dm|message) (?:me|directly)/i,
       /want (?:the|my|a) (?:full|complete|free) (?:guide|template|checklist|playbook|framework)/i,
-      /(?:save|bookmark) this (?:for|post)/i
+      /(?:save|bookmark) this (?:for|post)/i,
+      /how will you (?:enjoy|spend|use|handle|approach)/i
     ];
 
     const matches = patterns.filter(p => p.test(text));
@@ -453,11 +454,13 @@ const PostToastSignals = {
   },
 
   detectSelfieSermon(text) {
-    const hasAdvice = /(?:here'?s (?:my|the|a) (?:advice|tip|lesson)|lesson (?:i|learned)|my advice|pro tip|remember this|never forget)/i.test(text);
-    const isLong = text.length > 300;
-    const hasLifeWisdom = /(?:life is|life's too|you only (?:live|get)|at the end of the day|when you look back|on your deathbed)/i.test(text);
+    const hasAdvice = /(?:here'?s (?:my|the|a) (?:advice|tip|lesson|truth|thing)|lesson (?:i|learned)|my advice|pro tip|remember this|never forget|(?:we|you) (?:need|should|must|deserve|forget|spend too much))/i.test(text);
+    const isLong = text.length > 200;
+    const hasLifeWisdom = /(?:life is|life's too|you only (?:live|get)|at the end of the day|when you look back|on your deathbed|(?:work|that|it) matters|(?:let|allow|give) yourself|step(?:ping)? outside|take (?:a |the )?(?:break|moment|breath))/i.test(text);
 
-    if (hasAdvice && isLong && hasLifeWisdom) {
+    // Only need 2 of 3 signals now (was all 3)
+    const score = (hasAdvice ? 1 : 0) + (isLong ? 1 : 0) + (hasLifeWisdom ? 1 : 0);
+    if (score >= 2) {
       const r = PostToastRubric.tier3.selfiSermon;
       return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: 'Unsolicited life advice delivered to the void' };
     }
@@ -810,6 +813,52 @@ const PostToastSignals = {
     return null;
   },
 
+  // Mundane activity reframed as profound leadership lesson
+  detectMotivationalMundanity(text) {
+    const mundaneActivities = /(?:went for a (?:run|walk|hike|swim|bike|jog)|took a (?:break|nap|walk|shower)|made (?:coffee|breakfast|dinner|lunch)|sat (?:in|on) (?:my|the)|played with (?:my|the) (?:kids|dog)|left (?:the office|work|my desk)|snuck out|stepped outside|drove (?:home|to work))/i;
+    const profoundLesson = /(?:here'?s (?:the|what)|it (?:reminded|taught|hit|struck) me|(?:and )?(?:that|this) (?:matters|is (?:what|the)|changed)|we (?:spend|forget|need|don't)|(?:so|the) (?:lesson|takeaway|point|truth)|how will you|what (?:will|would) you|(?:let|allow|give) yourself)/i;
+    const leadershipFrame = /(?:building|leading|planning|managing|executing|driving (?:impact|results|growth)|strategy|team|meetings|calendar (?:full|packed)|hustle|grind|impact)/i;
+
+    if (mundaneActivities.test(text) && (profoundLesson.test(text) || leadershipFrame.test(text))) {
+      let pts = 1.5;
+      if (profoundLesson.test(text) && leadershipFrame.test(text)) pts = 2.0;
+      return { detected: true, points: pts, icon: '🏃', label: 'Motivational Mundanity', detail: 'Turned a normal activity into a LinkedIn leadership lesson' };
+    }
+    return null;
+  },
+
+  // "Don't read this if..." / reverse psychology engagement bait
+  detectAgreephishing(text) {
+    const patterns = [
+      /(?:don'?t|do not) (?:read|click|scroll|open|watch) (?:this|further|below|if)/i,
+      /(?:stop scrolling|wait|hold on|before you scroll)/i,
+      /(?:unpopular opinion|hot take|controversial|i'?ll probably get hate for this)/i,
+      /(?:most people|nobody|no one) (?:will|wants to) (?:tell|say|admit|hear|talk about) (?:you|this)/i,
+      /(?:i shouldn'?t (?:say|share|post) this|i might get fired for this)/i,
+      /(?:this (?:will|might|may) (?:upset|offend|trigger|bother|surprise)|prepare to be)/i,
+      /(?:you'?re not (?:ready|prepared) for this|brace yourself)/i
+    ];
+
+    const matches = patterns.filter(p => p.test(text));
+    if (matches.length > 0) {
+      const pts = matches.length > 1 ? 1.75 : 1.25;
+      return { detected: true, points: pts, icon: '🎣', label: 'Agreephishing', detail: 'Reverse psychology engagement bait' };
+    }
+    return null;
+  },
+
+  // Open-ended question endings designed to farm comments
+  detectQuestionFarming(text) {
+    const lines = text.split('\n').filter(l => l.trim().length > 0);
+    const lastLines = lines.slice(-3);
+    const endPatterns = /(?:how (?:will|do|would|about) you|what (?:do|would|will|about) you|what'?s your|what are your|how are you|where do you|who (?:else|agrees|relates)|does anyone else|can you relate|sound familiar)\s*\??$/im;
+
+    if (lastLines.some(l => endPatterns.test(l.trim()))) {
+      return { detected: true, points: 0.75, icon: '🎤', label: 'Question Farming', detail: 'Ends with an open question to farm comments' };
+    }
+    return null;
+  },
+
   // Run all detectors
   analyzeAll(text) {
     const results = [];
@@ -829,6 +878,7 @@ const PostToastSignals = {
       'detectCopypasta', 'detectAtFirstThenRealized', 'detectOverworkBrag',
       'detectFacebookOnLinkedIn', 'detectDisproportionateGratitude',
       'detectSelfFanFiction', 'detectItsCrazyToMe', 'detectAISlop',
+      'detectMotivationalMundanity', 'detectAgreephishing', 'detectQuestionFarming',
       // Negative
       'detectHasLinks', 'detectHasCode', 'detectShortFactual', 'detectSharesOthers'
     ];
