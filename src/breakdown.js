@@ -20,8 +20,13 @@ const PostToastBreakdown = {
     const panel = this.create(result);
     panel._parentPost = postElement;
 
-    // Position below the badge
-    badge.insertAdjacentElement('afterend', panel);
+    // Position below the badge — append to badge's parent wrapper
+    const wrapper = badge.parentElement;
+    if (wrapper) {
+      wrapper.appendChild(panel);
+    } else {
+      badge.insertAdjacentElement('afterend', panel);
+    }
     this.activePanel = panel;
 
     // Close on outside click

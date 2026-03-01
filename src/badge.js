@@ -35,14 +35,38 @@ const PostToastBadge = {
   inject(postElement, result) {
     if (this.isScored(postElement)) return;
 
-    // Make post container relative for badge positioning
-    const computed = window.getComputedStyle(postElement);
-    if (computed.position === 'static') {
-      postElement.style.position = 'relative';
+    const badge = this.create(result, postElement);
+
+    // Try to place in the social action bar (Like/Comment/Repost/Send)
+    const actionBar = postElement.querySelector('.social-details-social-actions') 
+      || postElement.querySelector('.feed-shared-social-actions')
+      || postElement.querySelector('[class*="social-action"]');
+
+    if (actionBar) {
+      // Wrap badge in a relative container for breakdown positioning
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'position: relative; display: inline-flex; align-items: center; margin-left: auto;';
+      wrapper.appendChild(badge);
+      actionBar.appendChild(wrapper);
+    } else {
+      // Fallback: put it after the post header area
+      const header = postElement.querySelector('.feed-shared-actor')
+        || postElement.querySelector('[class*="actor"]')
+        || postElement.querySelector('.update-components-actor');
+
+      if (header) {
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'position: relative; display: inline-flex; float: right; margin: 8px 12px 0 0;';
+        wrapper.appendChild(badge);
+        header.parentElement.insertBefore(wrapper, header.nextSibling);
+      } else {
+        // Last resort: absolute position in corner
+        badge.style.cssText += 'position: absolute; top: 12px; right: 56px;';
+        postElement.style.position = 'relative';
+        postElement.appendChild(badge);
+      }
     }
 
-    const badge = this.create(result, postElement);
-    postElement.appendChild(badge);
     this.markScored(postElement);
   },
 
