@@ -9,6 +9,16 @@ const PostToastObserver = {
   scoreCache: new Map(),
 
   init() {
+    // Set up IntersectionObserver FIRST
+    this.intersectionObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          PostToastBadge.scorePost(entry.target);
+          this.intersectionObserver.unobserve(entry.target);
+        }
+      }
+    }, { rootMargin: '200px' });
+
     // Score all existing posts
     this.scoreVisiblePosts();
 
@@ -39,15 +49,6 @@ const PostToastObserver = {
       subtree: true
     });
 
-    // IntersectionObserver for performance — only score visible posts
-    this.intersectionObserver = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          PostToastBadge.scorePost(entry.target);
-          this.intersectionObserver.unobserve(entry.target);
-        }
-      }
-    }, { rootMargin: '200px' });
   },
 
   scoreVisiblePosts() {
