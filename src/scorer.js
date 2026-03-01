@@ -22,8 +22,10 @@ const PostToastScorer = {
 
     // Count Tier 2 hits for compound multiplier
     const tier2Detectors = [
-      'Humble Brag', 'Thought Leader Cosplay', 'Engagement Bait',
-      'Toxic Positivity', 'Name Dropping', 'Selfless Hiring Post', 'Motivational Speech'
+      'Humble Brag', 'Thought Leader Cosplay', 'Agreephishing',
+      'Toxic Positivity', 'Name Dropping', 'Selfless Hiring Post', 'Hustle Porn',
+      'Humblebait', 'Gratitude Theater', 'Trauma Flexing', 'Echo Chamber',
+      'The Pivot Brag', 'Empathy Cosplay', 'LinkedInfluencer'
     ];
     const tier2Count = positiveSignals.filter(s => tier2Detectors.includes(s.label)).length;
 

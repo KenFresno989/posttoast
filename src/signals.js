@@ -214,6 +214,114 @@ const PostToastSignals = {
     return null;
   },
 
+  // ========== NEW TIER 2 SIGNALS ==========
+
+  detectHumblebait(text) {
+    const patterns = [
+      /i'?m not sure (?:i |if i )?should (?:share|post|say|mention) this/i,
+      /i debated (?:sharing|posting|whether to)/i,
+      /i wasn'?t (?:going to|sure if i should) (?:share|post|say)/i,
+      /i almost didn'?t (?:share|post) this/i,
+      /(?:nervous|scared|hesitant|vulnerable) (?:to share|to post|about sharing|about posting)/i,
+      /this (?:is|feels) (?:scary|vulnerable|hard) to (?:share|post|say|admit)/i
+    ];
+
+    if (patterns.some(p => p.test(text))) {
+      const r = PostToastRubric.tier2.humblebait;
+      return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: '"I almost didn\'t share this" — but of course you did' };
+    }
+    return null;
+  },
+
+  detectGratitudeTheater(text) {
+    const patterns = [
+      /thank (?:you|everyone|all of you|each and every|this community) (?:for|who)/i,
+      /(?:grateful|thankful) (?:to|for) (?:everyone|all|each|this community|my network|my tribe|my people)/i,
+      /(?:couldn'?t have done|wouldn'?t be here|none of this).{0,30}without (?:you|everyone|all of you|my)/i,
+      /(?:shoutout|shout out|hat tip|hats off) to (?:everyone|all|my|the amazing)/i,
+      /thank you to everyone who (?:has |have )?(?:supported|believed|been|helped|cheered)/i
+    ];
+
+    const isPerformative = text.length > 200; // short thank-yous are fine
+
+    if (patterns.some(p => p.test(text)) && isPerformative) {
+      const r = PostToastRubric.tier2.gratitudeTheater;
+      return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: 'Performative gratitude to an audience of thousands' };
+    }
+    return null;
+  },
+
+  detectTraumaFlex(text) {
+    const trauma = /(?:i was broke|i was poor|i was homeless|i slept (?:on|in)|i had nothing|i dropped out|i was fired|i lost everything|i was rejected|grew up (?:in poverty|poor|without|on food stamps)|single (?:mom|dad|parent)|abusive|addiction|rehab)/i.test(text);
+    const flex = /(?:now i|today i|fast forward|years later|look at me|i (?:make|earn|built|run|lead|own|manage)|(?:6|7|8).?figure|my company|my team|revenue|million|successful)/i.test(text);
+
+    if (trauma && flex) {
+      const r = PostToastRubric.tier2.traumaFlex;
+      return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: 'Leading with hardship to make the flex hit harder' };
+    }
+    return null;
+  },
+
+  detectEchoChamber(text) {
+    const unpopularOpinionPrefix = /(?:unpopular opinion|hot take|controversial|i'll probably get hate for this|people won't like this)/i.test(text);
+    const popularOpinions = [
+      /(?:hard work|work.?life balance|mental health|be kind|treat people|family (?:comes |is )first|kindness|empathy|listen more)/i,
+      /(?:your degree doesn'?t matter|college (?:isn'?t|is not) (?:necessary|required|needed))/i,
+      /(?:hire for attitude|culture (?:eats|beats) strategy|people don'?t leave (?:jobs|companies))/i,
+      /(?:leadership is|real leaders|a true leader|the best managers)/i
+    ];
+
+    if (unpopularOpinionPrefix && popularOpinions.some(p => p.test(text))) {
+      const r = PostToastRubric.tier2.echoChamber;
+      return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: '"Unpopular opinion" followed by the most popular opinion possible' };
+    }
+    return null;
+  },
+
+  detectPivotBrag(text) {
+    const patterns = [
+      /i (?:left|quit|walked away from|turned down) (?:my |a )?(?:\$?\d+[kK]|\d{3},?\d{3}|six.?figure|high.?paying|cushy|comfortable|corporate|big tech)/i,
+      /(?:left|quit|walked away from).{0,40}(?:follow my|pursue my|chase my|find my|passion|dream|calling|purpose)/i,
+      /(?:traded my|gave up my).{0,30}(?:salary|paycheck|bonus|stock|equity|comfort)/i,
+      /(?:everyone thought i was crazy|they said i was (?:crazy|nuts|insane)|friends thought|family thought)/i
+    ];
+
+    if (patterns.some(p => p.test(text))) {
+      const r = PostToastRubric.tier2.pivotBrag;
+      return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: '"I left my cushy job to follow my passion" — humble + flex + unsolicited' };
+    }
+    return null;
+  },
+
+  detectEmpathyCosplay(text) {
+    const patterns = [
+      /i (?:gave|tipped|bought|paid for) (?:my |a |the )?(?:barista|waiter|waitress|uber driver|delivery|stranger|homeless)/i,
+      /(?:a stranger|someone|a homeless (?:man|woman|person)).{0,40}(?:taught me|showed me|reminded me|changed my)/i,
+      /i (?:stopped|sat down|took time) to (?:talk to|listen to|help|chat with) (?:a |the )?(?:janitor|cleaner|security guard|intern|junior)/i,
+      /(?:everyone walked past|nobody stopped|no one noticed).{0,30}(?:but i|except me|i stopped)/i
+    ];
+
+    if (patterns.some(p => p.test(text))) {
+      const r = PostToastRubric.tier2.empathyCosplay;
+      return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: 'Performing empathy for an audience instead of just... being kind' };
+    }
+    return null;
+  },
+
+  detectLinkedInfluencer(text) {
+    const patterns = [
+      /(?:i had (?:coffee|lunch|dinner|a call|a chat) with|i asked|i once met|i sat next to) (?:a |the )?(?:ceo|founder|billionaire|investor)/i,
+      /(?:as|like) (?:steve jobs|elon|bezos|buffett|oprah|brené brown|simon sinek|gary vee) (?:once )?(?:said|taught|showed|always says)/i,
+      /(?:i learned|takeaway|key insight) from (?:my time at|working at|meeting with) (?:google|meta|apple|amazon|microsoft|tesla|openai)/i
+    ];
+
+    if (patterns.some(p => p.test(text))) {
+      const r = PostToastRubric.tier2.linkedInfluencer;
+      return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: 'Borrowing clout from people you probably never met' };
+    }
+    return null;
+  },
+
   // ========== TIER 3: SEASONING ==========
 
   detectEmojiAbuse(text) {
@@ -306,6 +414,52 @@ const PostToastSignals = {
     return null;
   },
 
+  // ========== NEW TIER 3 SIGNALS ==========
+
+  detectCorporateHaiku(text) {
+    const lines = text.split('\n').filter(l => l.trim().length > 0);
+    if (lines.length < 3 || lines.length > 6) return null;
+
+    const allShort = lines.every(l => l.trim().split(/\s+/).length <= 4);
+    const hasBuzzwords = /(?:innovation|leadership|growth|mindset|culture|strategy|excellence|vision|impact|purpose|transformation)/i.test(text);
+
+    if (allShort && hasBuzzwords) {
+      const r = PostToastRubric.tier3.corporateHaiku;
+      return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: 'Three buzzwords stacked vertically and called wisdom' };
+    }
+    return null;
+  },
+
+  detectSelfieSermon(text) {
+    const hasAdvice = /(?:here'?s (?:my|the|a) (?:advice|tip|lesson)|lesson (?:i|learned)|my advice|pro tip|remember this|never forget)/i.test(text);
+    const isLong = text.length > 300;
+    const hasLifeWisdom = /(?:life is|life's too|you only (?:live|get)|at the end of the day|when you look back|on your deathbed)/i.test(text);
+
+    if (hasAdvice && isLong && hasLifeWisdom) {
+      const r = PostToastRubric.tier3.selfiSermon;
+      return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: 'Unsolicited life advice delivered to the void' };
+    }
+    return null;
+  },
+
+  detectRecruiterBait(text) {
+    const patterns = [
+      /(?:open to|exploring|looking for) (?:new |exciting )?(?:opportunities|roles|challenges|my next)/i,
+      /(?:available|on the market|free agent|in transition|between roles)/i,
+      /(?:if you(?:'re| are) (?:hiring|looking)|know anyone (?:hiring|looking)|my dms are open)/i,
+      /(?:let'?s connect|let'?s chat|reach out|drop me a (?:line|message|dm))/i
+    ];
+
+    const isSubtle = /(?:excited (?:about|for) what'?s next|new chapter|next adventure|next chapter)/i.test(text);
+    const matches = patterns.filter(p => p.test(text));
+
+    if (matches.length >= 2 || (matches.length >= 1 && isSubtle)) {
+      const r = PostToastRubric.tier3.recruiterBait;
+      return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: 'Open to work but making it sound like a lifestyle choice' };
+    }
+    return null;
+  },
+
   // ========== NEGATIVE SIGNALS ==========
 
   detectHasLinks(text) {
@@ -361,9 +515,12 @@ const PostToastSignals = {
       // Tier 2
       'detectHumbleBrag', 'detectThoughtLeader', 'detectEngagementBait', 'detectToxicPositivity',
       'detectNameDrop', 'detectSelflessHiring', 'detectMotivationalSpeech',
+      'detectHumblebait', 'detectGratitudeTheater', 'detectTraumaFlex', 'detectEchoChamber',
+      'detectPivotBrag', 'detectEmpathyCosplay', 'detectLinkedInfluencer',
       // Tier 3
       'detectEmojiAbuse', 'detectBroetry', 'detectCorporateJargon', 'detectNarcissismIndex',
-      'detectDramaticBreaks', 'detectHashtagSpam',
+      'detectDramaticBreaks', 'detectHashtagSpam', 'detectCorporateHaiku', 'detectSelfieSermon',
+      'detectRecruiterBait',
       // Negative
       'detectHasLinks', 'detectHasCode', 'detectShortFactual', 'detectSharesOthers'
     ];

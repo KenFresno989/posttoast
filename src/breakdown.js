@@ -39,11 +39,14 @@ const PostToastBreakdown = {
     const panel = document.createElement('div');
     panel.className = 'pt-breakdown';
 
+    const roastHeadline = PostToastRubric.getRoastHeadline(result.score);
+
     let html = `
       <div class="pt-breakdown-header">
         <span class="pt-breakdown-title">PostToast Breakdown</span>
         <span class="pt-breakdown-label ${PostToastScorer.getColorClass(result.score)}">${result.label}</span>
       </div>
+      <div class="pt-roast-headline ${PostToastScorer.getColorClass(result.score)}">${roastHeadline}</div>
       <div class="pt-breakdown-signals">
     `;
 
@@ -82,6 +85,15 @@ const PostToastBreakdown = {
       html += `
         <div class="pt-compound-note">
           ⚠️ Compound multiplier: ${result.tier2Count} core cringe signals stacking (×${PostToastRubric.compoundMultiplier})
+        </div>
+      `;
+    }
+
+    // Low score celebration
+    if (result.signals.length === 0) {
+      html += `
+        <div class="pt-genuine-notice">
+          🫡 No signals detected. This person just... said something real. Respect.
         </div>
       `;
     }
