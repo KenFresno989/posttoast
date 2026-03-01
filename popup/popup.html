@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="pt-popup">
+    <div class="pt-popup-header">
+      <span class="pt-popup-logo">🍞</span>
+      <span class="pt-popup-name">PostToast</span>
+    </div>
+    <p class="pt-popup-tagline">Roasting LinkedIn, one post at a time.</p>
+
+    <div class="pt-toggle-row">
+      <span>Extension</span>
+      <label class="pt-switch">
+        <input type="checkbox" id="enableToggle" checked>
+        <span class="pt-slider"></span>
+      </label>
+    </div>
+
+    <div class="pt-status" id="status">Active — scoring posts</div>
+
+    <div class="pt-footer">
+      <a href="https://posttoast.app" target="_blank">posttoast.app</a>
+      <span>v1.0.0</span>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
