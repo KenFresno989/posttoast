@@ -1,3 +1,4 @@
+// Copyright (c) 2026 PostToast. All rights reserved.
 /**
  * PostToast Scoring Engine
  * Combines signal detections into a final 0-10 score with quarter-point precision.

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 PostToast. All rights reserved.
 // PostToast Background Service Worker
 // Minimal for MVP — handles install event and future extensibility
 

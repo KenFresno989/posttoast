@@ -1,3 +1,4 @@
+// Copyright (c) 2026 PostToast. All rights reserved.
 /**
  * PostToast Content Script — Entry Point
  * Initializes PostToast on LinkedIn pages.

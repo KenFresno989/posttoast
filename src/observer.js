@@ -1,3 +1,4 @@
+// Copyright (c) 2026 PostToast. All rights reserved.
 /**
  * PostToast Observer
  * Watches for new posts loaded via infinite scroll and scores them.

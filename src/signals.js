@@ -1,3 +1,4 @@
+// Copyright (c) 2026 PostToast. All rights reserved.
 /**
  * PostToast Signal Detectors
  * Each detector returns { detected: bool, points: number, detail: string } or null

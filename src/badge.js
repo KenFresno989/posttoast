@@ -1,3 +1,4 @@
+// Copyright (c) 2026 PostToast. All rights reserved.
 /**
  * PostToast Badge
  * Injects score badges into LinkedIn posts.

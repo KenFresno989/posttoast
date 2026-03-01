@@ -1,3 +1,4 @@
+// Copyright (c) 2026 PostToast. All rights reserved.
 /**
  * PostToast Breakdown Panel
  * Shows detailed signal breakdown when badge is clicked.

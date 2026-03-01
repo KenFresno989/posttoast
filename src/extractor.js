@@ -1,3 +1,4 @@
+// Copyright (c) 2026 PostToast. All rights reserved.
 /**
  * PostToast DOM Extractor
  * Extracts post text from LinkedIn's DOM using cascading selectors.

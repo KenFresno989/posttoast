@@ -1,3 +1,4 @@
+// Copyright (c) 2026 PostToast. All rights reserved.
 /**
  * PostToast Scoring Rubric
  * Weights and thresholds for all cringe signals.
