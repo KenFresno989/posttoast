@@ -757,8 +757,8 @@
   <section class="cta-section" id="waitlist">
     <h2>Ready to see LinkedIn clearly?</h2>
     <p>Join the waitlist. Be first to roast your feed.</p>
-    <form class="waitlist-form" id="waitlistForm">
-      <input type="email" placeholder="your@email.com" required id="waitlistEmail">
+    <form class="waitlist-form" id="waitlistForm" name="waitlist" method="POST" data-netlify="true">
+      <input type="email" name="email" placeholder="your@email.com" required id="waitlistEmail">
       <button type="submit">Join Waitlist</button>
     </form>
     <p class="hero-sub">No spam. Just a launch notification.</p>
@@ -772,19 +772,22 @@
   </footer>
 
   <script>
-    // Simple waitlist form (stores to localStorage for now — swap for real backend later)
     document.getElementById('waitlistForm').addEventListener('submit', function(e) {
       e.preventDefault();
+      const form = this;
       const email = document.getElementById('waitlistEmail').value;
 
-      // Store locally (replace with API call to your backend)
-      const waitlist = JSON.parse(localStorage.getItem('posttoast_waitlist') || '[]');
-      waitlist.push({ email, timestamp: new Date().toISOString() });
-      localStorage.setItem('posttoast_waitlist', JSON.stringify(waitlist));
-
-      // Show success
-      this.style.display = 'none';
-      document.getElementById('waitlistSuccess').style.display = 'block';
+      fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(new FormData(form)).toString()
+      }).then(() => {
+        form.style.display = 'none';
+        document.getElementById('waitlistSuccess').style.display = 'block';
+      }).catch(() => {
+        form.style.display = 'none';
+        document.getElementById('waitlistSuccess').style.display = 'block';
+      });
     });
 
     // Smooth scroll for anchor links
