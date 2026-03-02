@@ -1045,11 +1045,11 @@ const PostToastSignals = {
     const frameworkMatch = frameworkSpeak.some(p => p.test(text));
     if (frameworkMatch) {
       const pts = buzzMatches.length >= 3 ? 2.0 : 1.5;
-      return { detected: true, points: pts, icon: '🗺️', label: 'Strategerey', detail: 'Vague strategy framework that sounds impressive but says nothing' };
+      return { detected: true, points: pts, icon: '🗺️', label: 'Strategy Cosplay', detail: 'Vague strategy framework that sounds impressive but says nothing' };
     }
     // Also catch heavy buzzword stacking even without explicit framework
     if (buzzMatches.length >= 5) {
-      return { detected: true, points: 1.25, icon: '🗺️', label: 'Strategerey', detail: `${buzzMatches.length} strategy buzzwords in one post — that's not a strategy, that's a word salad` };
+      return { detected: true, points: 1.25, icon: '🗺️', label: 'Strategy Cosplay', detail: `${buzzMatches.length} strategy buzzwords in one post — that's not a strategy, that's a word salad` };
     }
     return null;
   },
