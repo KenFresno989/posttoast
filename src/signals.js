@@ -859,6 +859,175 @@ const PostToastSignals = {
     return null;
   },
 
+  // "Building in stealth" / artificial FOMO
+  detectStealthModeFlex(text) {
+    const patterns = [
+      /(?:building|working|operating) in stealth/i,
+      /stealth mode/i,
+      /can'?t share (?:yet|much|details|more) but/i,
+      /something (?:big|huge|exciting|special) (?:is )?coming/i,
+      /stay tuned for (?:the|a|an|what)/i,
+      /big (?:news|announcement) (?:coming|soon|dropping)/i,
+      /watch this space/i
+    ];
+    if (patterns.some(p => p.test(text))) {
+      return { detected: true, points: 1.5, icon: '🕵️', label: 'Stealth Mode Flex', detail: 'Creating artificial FOMO about something nobody asked about' };
+    }
+    return null;
+  },
+
+  // Zero-effort poll/question bait
+  detectLazyPollBait(text) {
+    const lines = text.split('\n').filter(l => l.trim().length > 0);
+    const lastLine = lines[lines.length - 1]?.trim() || '';
+    const lazyEndings = /^(?:Agree|Thoughts|Your take|What would you add|What do you think|Right|Yes or no|True or false|Fair|Am I wrong)\s*\??\s*$/i;
+    if (lazyEndings.test(lastLine)) {
+      return { detected: true, points: 1.0, icon: '🗳️', label: 'Lazy Poll Bait', detail: 'Zero-effort one-word question fishing for comments' };
+    }
+    return null;
+  },
+
+  // "Tag someone who needs this"
+  detectTagBrigade(text) {
+    const patterns = [
+      /tag (?:a |someone|your|the |that )/i,
+      /who needs to (?:see|hear|read) this/i,
+      /share this with (?:someone|a |your)/i,
+      /send this to (?:someone|a |your|that)/i
+    ];
+    if (patterns.some(p => p.test(text))) {
+      return { detected: true, points: 1.5, icon: '🏷️', label: 'Tag Brigade', detail: 'Instagram engagement tactics on LinkedIn' };
+    }
+    return null;
+  },
+
+  // "Unpopular opinion:" (it's always popular)
+  detectUnpopularOpinionTheater(text) {
+    const patterns = [
+      /^(?:unpopular opinion|hot take|controversial (?:take|opinion|but|thought))/im,
+      /(?:this might be|this is probably|this may be) (?:unpopular|controversial)/i,
+      /(?:i know this is|i know it'?s) (?:unpopular|controversial)/i,
+      /(?:call me crazy|hear me out|don'?t @ me)/i
+    ];
+    if (patterns.some(p => p.test(text))) {
+      return { detected: true, points: 1.0, icon: '🌶️', label: 'Unpopular Opinion Theater', detail: 'Prefacing a mainstream opinion with "unpopular opinion" to seem edgy' };
+    }
+    return null;
+  },
+
+  // "I don't usually post but..."
+  detectReluctantPoster(text) {
+    const patterns = [
+      /i (?:don'?t|rarely|never|seldom) (?:usually )?(?:post|share|write|do this)/i,
+      /not (?:my style|something i (?:usually|normally)) (?:to |do)/i,
+      /i normally stay quiet/i,
+      /stepping out of my comfort zone (?:to|by) (?:post|shar)/i,
+      /first time (?:posting|sharing|writing) (?:something like this|here|on linkedin)/i
+    ];
+    if (patterns.some(p => p.test(text))) {
+      return { detected: true, points: 1.0, icon: '🫣', label: 'Reluctant Poster', detail: '"I never post but..." — yes you do, your profile has 47 posts this month' };
+    }
+    return null;
+  },
+
+  // Fabricated encounters with wise strangers
+  detectStrangerWisdom(text) {
+    const strangers = /(?:homeless (?:man|woman|person)|janitor|uber driver|lyft driver|taxi driver|barista|cashier|waiter|waitress|stranger|old (?:man|woman)|kid|child|my (?:5|6|7|8|9|ten|\d+).year.old)/i;
+    const wisdom = /(?:(?:taught|told|asked|reminded|said to|looked at) me|changed my (?:perspective|life|mind)|(?:made me|I) (?:realize|think|understand|reflect)|wise(?:st|r)? (?:thing|words|advice)|(?:simple|profound) (?:question|words|truth))/i;
+    if (strangers.test(text) && wisdom.test(text)) {
+      return { detected: true, points: 2.5, icon: '🧙', label: 'Stranger Wisdom', detail: 'A random stranger conveniently dispensed profound business wisdom' };
+    }
+    return null;
+  },
+
+  // Trivial event → profound life lesson
+  detectMundaneEpiphany(text) {
+    const mundane = /(?:dropped my|spilled (?:my |the )?coffee|stuck in traffic|waiting in line|flat tire|missed (?:my |the )(?:bus|train|flight)|couldn'?t find (?:parking|my keys)|burnt (?:my |the )|broke my phone|lost my wallet)/i;
+    const epiphany = /(?:(?:and |then )?(?:i |it )?(?:realized|hit me|taught me|reminded me|learned|dawned on me)|(?:that'?s when|in that moment)|(?:lesson|takeaway|truth|perspective|metaphor for))/i;
+    if (mundane.test(text) && epiphany.test(text)) {
+      return { detected: true, points: 2.0, icon: '☕', label: 'Mundane Epiphany', detail: 'Turned a trivial everyday event into a profound life lesson' };
+    }
+    return null;
+  },
+
+  // "Swipe left" instructions on carousels
+  detectCarouselCommander(text) {
+    const patterns = [
+      /swipe (?:left|right|👉|➡️|←)/i,
+      /(?:👉|➡️)\s*swipe/i,
+      /slide \d+ of/i,
+      /check (?:each|every) slide/i
+    ];
+    if (patterns.some(p => p.test(text))) {
+      return { detected: true, points: 0.5, icon: '📱', label: 'Carousel Commander', detail: 'Explaining how to swipe like your audience are toddlers' };
+    }
+    return null;
+  },
+
+  // Inflated meaningless job titles
+  detectFakeJobTitle(text) {
+    const patterns = [
+      /Chief (?:Happiness|Heart|People|Disruption|Inspiration|Dream|Vibe|Culture|Story|Chaos)/i,
+      /(?:Growth|Marketing|Sales|Code|Data|Design) (?:Hacker|Ninja|Guru|Rockstar|Wizard|Maven|Jedi|Samurai|Unicorn)/i,
+      /(?:Ninja|Guru|Rockstar|Wizard|Maven|Evangelist|Sherpa|Alchemist) (?:at|@|\|)/i,
+      /Head of (?:Vibes|Dreams|Magic|Happiness|Awesomeness)/i
+    ];
+    if (patterns.some(p => p.test(text))) {
+      return { detected: true, points: 1.0, icon: '🦄', label: 'Fake Job Title', detail: 'A made-up title designed to sound quirky instead of competent' };
+    }
+    return null;
+  },
+
+  // "Here's why." clickbait suspense
+  detectHeresWhyClickbait(text) {
+    const patterns = [
+      /here'?s (?:why|what (?:happened|I learned|nobody tells you|changed))[.:]/i,
+      /(?:and |but )?(?:it|everything) changed[.:]/i,
+      /(?:the result|what happened next)[?.:]/i
+    ];
+    if (patterns.some(p => p.test(text))) {
+      return { detected: true, points: 0.5, icon: '🪝', label: "Here's Why Clickbait", detail: 'BuzzFeed-style suspense for mundane information' };
+    }
+    return null;
+  },
+
+  // Exploiting death/illness/tragedy for engagement
+  detectTragedyMining(text) {
+    const tragedy = /(?:passed away|died|lost (?:my|our) (?:father|mother|dad|mom|brother|sister|friend|son|daughter|wife|husband|partner)|funeral|cancer|terminal|diagnosed|hospice|last (?:words|breath|moments))/i;
+    const lesson = /(?:(?:taught|teaches|reminded) me|(?:\d+|three|four|five|six|seven) (?:lessons?|things?|takeaways?)|here'?s what|leadership|business|career|professional|entrepreneur)/i;
+    if (tragedy.test(text) && lesson.test(text)) {
+      return { detected: true, points: 2.5, icon: '⚰️', label: 'Tragedy Mining', detail: 'Exploiting death or illness for professional engagement' };
+    }
+    return null;
+  },
+
+  // "Building an empire" relationship status flex
+  detectEmpireBuilder(text) {
+    const patterns = [
+      /building (?:an? )?empire/i,
+      /(?:single|married|relationship).{0,30}(?:building|empire|grind)/i,
+      /relationship status.{0,20}(?:hustle|grind|empire|startup|business)/i,
+      /(?:married to|in a relationship with) (?:the |my )?(?:grind|hustle|vision|mission|startup)/i
+    ];
+    if (patterns.some(p => p.test(text))) {
+      return { detected: true, points: 1.5, icon: '👑', label: 'Empire Builder', detail: 'My relationship status is "building an empire" — cool story bro' };
+    }
+    return null;
+  },
+
+  // "Thrilled to announce!" / maximum enthusiasm for everything
+  detectExclamationAnnouncement(text) {
+    const patterns = [
+      /(?:thrilled|excited|delighted|honored|privileged|blessed|proud|overjoyed|ecstatic|humbled|stoked|pumped|over the moon) to (?:announce|share|reveal|unveil|launch|join|start)/i
+    ];
+    if (patterns.some(p => p.test(text))) {
+      const exclamations = (text.match(/!/g) || []).length;
+      const pts = exclamations >= 3 ? 1.0 : 0.5;
+      return { detected: true, points: pts, icon: '📢', label: 'Exclamation Announcement', detail: 'Maximum enthusiasm for a routine professional update' };
+    }
+    return null;
+  },
+
   // Run all detectors
   analyzeAll(text) {
     const results = [];
@@ -879,6 +1048,11 @@ const PostToastSignals = {
       'detectFacebookOnLinkedIn', 'detectDisproportionateGratitude',
       'detectSelfFanFiction', 'detectItsCrazyToMe', 'detectAISlop',
       'detectMotivationalMundanity', 'detectAgreephishing', 'detectQuestionFarming',
+      'detectStealthModeFlex', 'detectLazyPollBait', 'detectTagBrigade',
+      'detectUnpopularOpinionTheater', 'detectReluctantPoster', 'detectStrangerWisdom',
+      'detectMundaneEpiphany', 'detectCarouselCommander', 'detectFakeJobTitle',
+      'detectHeresWhyClickbait', 'detectTragedyMining', 'detectEmpireBuilder',
+      'detectExclamationAnnouncement',
       // Negative
       'detectHasLinks', 'detectHasCode', 'detectShortFactual', 'detectSharesOthers'
     ];
