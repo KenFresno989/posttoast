@@ -802,6 +802,20 @@ const PostToastSignals = {
     return null;
   },
 
+  // Turning a minor loss/setback into a heroic journey
+  detectSilverMedalSermon(text) {
+    const lossFrame = /(?:i (?:didn'?t|did not) win|i (?:lost|came in|finished) (?:last|second|2nd|third|3rd)|i (?:failed|wasn'?t (?:selected|chosen|picked))|i got (?:rejected|turned down|passed over)|didn'?t (?:get|make|land) (?:the|it|a))/i;
+    const reframe = /(?:(?:and )?(?:i'?m |i am |i couldn'?t be )?(?:thrilled|grateful|thankful|happy|glad|proud|blessed)|(?:best thing|greatest lesson|exactly what i needed|keeps me (?:hungry|motivated|humble|going|driven))|(?:here'?s (?:why|what)|(?:and )?that'?s (?:ok|okay|fine|the point|what matters|a good thing))|(?:i (?:needed|learned|grew|improved)|made me (?:better|stronger|hungrier)))/i;
+    const epic = /(?:next time|rematch|come back|won'?t (?:stop|quit|give up)|watch me|game on|let'?s go|bring it|i'?ll be (?:back|ready|better))/i;
+
+    if (lossFrame.test(text) && reframe.test(text)) {
+      let pts = 1.75;
+      if (epic.test(text)) pts = 2.25;
+      return { detected: true, points: pts, icon: '🥈', label: 'Silver Medal Sermon', detail: 'Turned a minor setback into a heroic underdog narrative' };
+    }
+    return null;
+  },
+
   // New job announcements — legitimate LinkedIn use
   detectNewJobAnnouncement(text) {
     const patterns = [
@@ -1121,6 +1135,7 @@ const PostToastSignals = {
       'detectMundaneEpiphany', 'detectCarouselCommander', 'detectFakeJobTitle',
       'detectHeresWhyClickbait', 'detectTragedyMining', 'detectEmpireBuilder',
       'detectExclamationAnnouncement', 'detectStrategerey', 'detectHumblePromo',
+      'detectSilverMedalSermon',
       // Negative
       'detectHasLinks', 'detectHasCode', 'detectShortFactual', 'detectSharesOthers',
       'detectNewJobAnnouncement'
