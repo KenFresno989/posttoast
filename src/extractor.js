@@ -9,6 +9,7 @@ const PostToastExtractor = {
   SELECTORS: {
     postContainer: [
       '[data-urn^="urn:li:activity"]',
+      '[data-urn^="urn:li:aggregate"]',
       '.feed-shared-update-v2',
       '.occludable-update',
       '.feed-shared-update-v2__content',
