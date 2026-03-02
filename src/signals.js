@@ -802,6 +802,23 @@ const PostToastSignals = {
     return null;
   },
 
+  // New job announcements — legitimate LinkedIn use
+  detectNewJobAnnouncement(text) {
+    const patterns = [
+      /(?:today i|i'?m |i am )(?:start|starting|joining|beginning|thrilled to (?:announce|share) (?:that )?i'?(?:m|ve)? (?:join|start|accept))/i,
+      /(?:new role|new position|new chapter|new adventure|new journey) (?:as|at|with)/i,
+      /(?:excited|thrilled|proud|happy|grateful) to (?:announce|share|say)?.{0,30}(?:join|start|accept|begin|new role|new position)/i,
+      /(?:first day|day one|officially (?:start|join|part of))/i,
+      /(?:i'?(?:m|ve) (?:just )?(?:joined|started|accepted|begun)|just started (?:a |my )new)/i,
+      /(?:proud to (?:join|be (?:part of|joining)))/i
+    ];
+
+    if (patterns.some(p => p.test(text))) {
+      return { detected: true, points: -3.0, icon: '🎉', label: 'New Job Announcement', detail: 'One of the few legit reasons to post on LinkedIn — congrats!' };
+    }
+    return null;
+  },
+
   detectSharesOthers(text) {
     const patterns = [
       /(?:congrats|congratulations|shoutout|shout out|kudos|props|hat tip|hats off) to (?!me|myself)/i,
@@ -1105,7 +1122,8 @@ const PostToastSignals = {
       'detectHeresWhyClickbait', 'detectTragedyMining', 'detectEmpireBuilder',
       'detectExclamationAnnouncement', 'detectStrategerey', 'detectHumblePromo',
       // Negative
-      'detectHasLinks', 'detectHasCode', 'detectShortFactual', 'detectSharesOthers'
+      'detectHasLinks', 'detectHasCode', 'detectShortFactual', 'detectSharesOthers',
+      'detectNewJobAnnouncement'
     ];
 
     for (const name of detectors) {
