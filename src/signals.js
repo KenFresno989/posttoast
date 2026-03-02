@@ -246,7 +246,11 @@ const PostToastSignals = {
       /(?:grateful|thankful) (?:to|for) (?:everyone|all|each|this community|my network|my tribe|my people)/i,
       /(?:couldn'?t have done|wouldn'?t be here|none of this).{0,30}without (?:you|everyone|all of you|my)/i,
       /(?:shoutout|shout out|hat tip|hats off) to (?:everyone|all|my|the amazing)/i,
-      /thank you to everyone who (?:has |have )?(?:supported|believed|been|helped|cheered)/i
+      /thank you to everyone who (?:has |have )?(?:supported|believed|been|helped|cheered)/i,
+      /(?:endless|immense|deep|profound|heartfelt|sincere) (?:gratitude|appreciation|thanks)/i,
+      /(?:wonderful|amazing|incredible|beautiful) (?:people|humans|souls|community|network|journey)/i,
+      /(?:been generous with|taken a chance on|believed in) me/i,
+      /(?:enriching|meaningful|transformative|life.changing) (?:conversations?|experiences?|journey|connections?)/i
     ];
 
     const isPerformative = text.length > 200; // short thank-yous are fine
@@ -1054,6 +1058,27 @@ const PostToastSignals = {
     return null;
   },
 
+  // Self-promotion disguised as reflection/gratitude
+  detectHumblePromo(text) {
+    const reflectionFrame = /(?:what (?:i'?ve|i have) learned|looking back|reflecting on|lessons from|(?:it'?s been|it has been) (?:a |an |\d+ )|anniversary|birthday|milestone|journey)/i;
+    const selfPromo = /(?:check (?:out|it)|buy (?:a |my |the )|grab (?:a |your |my )|order (?:your|a|my)|get (?:your |a )?copy|suggest it to|spread the word|share (?:it |this )?with|available (?:on|at|now)|link (?:in |below|here)|get (?:it |the book |tickets )(?:here|at|on))/i;
+    const humbleBrag = /(?:\d+ (?:podcasts?|TV|talks?|speaking|interviews?|keynotes?|articles?|countries|cities|downloads?|readers?|copies|clients?|customers?))/i;
+
+    const hasReflection = reflectionFrame.test(text);
+    const hasPromo = selfPromo.test(text);
+    const hasBrag = humbleBrag.test(text);
+
+    if (hasReflection && hasPromo) {
+      let pts = 1.5;
+      if (hasBrag) pts = 2.0;
+      return { detected: true, points: pts, icon: '🎁', label: 'Humble Promo', detail: 'Self-promotion gift-wrapped as a personal reflection' };
+    }
+    if (hasReflection && hasBrag) {
+      return { detected: true, points: 1.25, icon: '🎁', label: 'Humble Promo', detail: 'Listing accomplishments disguised as gratitude' };
+    }
+    return null;
+  },
+
   // Run all detectors
   analyzeAll(text) {
     const results = [];
@@ -1078,7 +1103,7 @@ const PostToastSignals = {
       'detectUnpopularOpinionTheater', 'detectReluctantPoster', 'detectStrangerWisdom',
       'detectMundaneEpiphany', 'detectCarouselCommander', 'detectFakeJobTitle',
       'detectHeresWhyClickbait', 'detectTragedyMining', 'detectEmpireBuilder',
-      'detectExclamationAnnouncement', 'detectStrategerey',
+      'detectExclamationAnnouncement', 'detectStrategerey', 'detectHumblePromo',
       // Negative
       'detectHasLinks', 'detectHasCode', 'detectShortFactual', 'detectSharesOthers'
     ];
