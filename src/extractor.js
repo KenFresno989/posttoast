@@ -10,14 +10,20 @@ const PostToastExtractor = {
     postContainer: [
       '[data-urn^="urn:li:activity"]',
       '.feed-shared-update-v2',
-      '.occludable-update'
+      '.occludable-update',
+      '.feed-shared-update-v2__content',
+      '.update-components-update'
     ],
     postText: [
       '.feed-shared-text span[dir="ltr"]',
       '.feed-shared-update-v2__description span[dir="ltr"]',
       '.break-words span[dir="ltr"]',
       '.feed-shared-text',
-      '.update-components-text span[dir="ltr"]'
+      '.update-components-text span[dir="ltr"]',
+      '.update-components-text .break-words',
+      '.feed-shared-inline-show-more-text span[dir="ltr"]',
+      '.feed-shared-update-v2__commentary span[dir="ltr"]',
+      '.feed-shared-update-v2__commentary .break-words'
     ],
     postAuthor: [
       '.feed-shared-actor__name span[aria-hidden="true"]',
