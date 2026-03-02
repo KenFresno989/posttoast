@@ -1028,6 +1028,32 @@ const PostToastSignals = {
     return null;
   },
 
+  // Fake strategy frameworks and business wisdom cosplay
+  detectStrategerey(text) {
+    const frameworkSpeak = [
+      /(?:my |the |a )?(?:\d+|three|four|five|six|seven) (?:pillars?|principles?|keys?|rules?|laws?|steps?|secrets?|truths?) (?:of|to|for) (?:leadership|success|growth|scaling|hiring|winning|building|innovation)/i,
+      /(?:framework|methodology|playbook|blueprint|roadmap|formula|system|matrix) (?:for|to|I) (?:use|built|developed|created|follow)/i,
+      /(?:the |my )?(?:leadership|growth|success|innovation|hiring|scaling) (?:framework|playbook|matrix|formula|pyramid|flywheel)/i,
+      /(?:here'?s|this is) (?:my|the|a) (?:framework|system|method|approach|model|process)/i,
+      /(?:step 1|phase 1|pillar 1|principle 1|rule 1)[.:]/im,
+      /(?:align|execute|iterate|optimize|scale)\s*→\s*(?:align|execute|iterate|optimize|scale|repeat|grow)/i,
+      /(?:vision|mission|strategy|execution|culture)\s*[>→➡️]\s*(?:vision|mission|strategy|execution|culture|results)/i
+    ];
+    const buzzwordDensity = /(?:leverage|optimize|scale|align|execute|iterate|innovate|disrupt|transform|empower|unlock|accelerate)/gi;
+    const buzzMatches = text.match(buzzwordDensity) || [];
+
+    const frameworkMatch = frameworkSpeak.some(p => p.test(text));
+    if (frameworkMatch) {
+      const pts = buzzMatches.length >= 3 ? 2.0 : 1.5;
+      return { detected: true, points: pts, icon: '🗺️', label: 'Strategerey', detail: 'Vague strategy framework that sounds impressive but says nothing' };
+    }
+    // Also catch heavy buzzword stacking even without explicit framework
+    if (buzzMatches.length >= 5) {
+      return { detected: true, points: 1.25, icon: '🗺️', label: 'Strategerey', detail: `${buzzMatches.length} strategy buzzwords in one post — that's not a strategy, that's a word salad` };
+    }
+    return null;
+  },
+
   // Run all detectors
   analyzeAll(text) {
     const results = [];
@@ -1052,7 +1078,7 @@ const PostToastSignals = {
       'detectUnpopularOpinionTheater', 'detectReluctantPoster', 'detectStrangerWisdom',
       'detectMundaneEpiphany', 'detectCarouselCommander', 'detectFakeJobTitle',
       'detectHeresWhyClickbait', 'detectTragedyMining', 'detectEmpireBuilder',
-      'detectExclamationAnnouncement',
+      'detectExclamationAnnouncement', 'detectStrategerey',
       // Negative
       'detectHasLinks', 'detectHasCode', 'detectShortFactual', 'detectSharesOthers'
     ];
