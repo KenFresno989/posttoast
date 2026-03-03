@@ -6,48 +6,105 @@
 (function() {
   'use strict';
 
-  let enabled = true;
-
-  // Check if extension is enabled
-  chrome.storage.sync.get(['posttoast_enabled'], (result) => {
-    enabled = result.posttoast_enabled !== false; // default to true
-    if (enabled) {
-      startPostToast();
-    }
+  console.log('[PostToast] Content script loaded', {
+    version: chrome.runtime.getManifest().version,
+    url: window.location.href,
+    timestamp: new Date().toISOString()
   });
 
-  // Listen for toggle from popup
-  chrome.storage.onChanged.addListener((changes) => {
-    if (changes.posttoast_enabled) {
-      enabled = changes.posttoast_enabled.newValue;
+  let enabled = true;
+  const requiredModules = ['PostToastExtractor', 'PostToastObserver', 'PostToastBadge'];
+  
+  function checkDependencies() {
+    const missing = requiredModules.filter(name => typeof window[name] === 'undefined');
+    if (missing.length > 0) {
+      console.warn('[PostToast] Missing dependencies:', missing);
+      return false;
+    }
+    console.log('[PostToast] All dependencies loaded');
+    return true;
+  }
+
+  function init() {
+    // Wait for dependencies to load with retry logic
+    if (!checkDependencies()) {
+      console.log('[PostToast] Waiting for dependencies to load...');
+      setTimeout(init, 100);
+      return;
+    }
+
+    console.log('[PostToast] Initializing...');
+
+    // Check if extension is enabled
+    chrome.storage.sync.get(['posttoast_enabled'], (result) => {
+      enabled = result.posttoast_enabled !== false; // default to true
+      console.log('[PostToast] Extension enabled:', enabled);
       if (enabled) {
         startPostToast();
-      } else {
-        stopPostToast();
       }
-    }
-  });
+    });
+
+    // Listen for toggle from popup
+    chrome.storage.onChanged.addListener((changes) => {
+      if (changes.posttoast_enabled) {
+        enabled = changes.posttoast_enabled.newValue;
+        console.log('[PostToast] Toggle changed:', enabled);
+        if (enabled) {
+          startPostToast();
+        } else {
+          stopPostToast();
+        }
+      }
+    });
+  }
+
+  // Start initialization when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 
   function startPostToast() {
-    // Wait for feed to load
-    const checkFeed = setInterval(() => {
-      const posts = PostToastExtractor.getAllPosts();
-      if (posts.length > 0 || document.querySelector('main')) {
-        clearInterval(checkFeed);
-        PostToastObserver.init();
-      }
-    }, 500);
+    console.log('[PostToast] Starting PostToast observer...');
+    
+    try {
+      // Wait for feed to load
+      const checkFeed = setInterval(() => {
+        try {
+          const posts = PostToastExtractor.getAllPosts();
+          if (posts.length > 0 || document.querySelector('main')) {
+            console.log('[PostToast] Feed found, initializing observer. Posts found:', posts.length);
+            clearInterval(checkFeed);
+            PostToastObserver.init();
+          }
+        } catch (err) {
+          console.error('[PostToast] Error checking feed:', err);
+        }
+      }, 500);
 
-    // Safety: stop checking after 30 seconds
-    setTimeout(() => clearInterval(checkFeed), 30000);
+      // Safety: stop checking after 30 seconds
+      setTimeout(() => {
+        clearInterval(checkFeed);
+        console.log('[PostToast] Feed check timeout reached');
+      }, 30000);
+    } catch (err) {
+      console.error('[PostToast] Fatal error in startPostToast:', err);
+    }
   }
 
   function stopPostToast() {
-    PostToastObserver.destroy();
-    // Remove all badges
-    document.querySelectorAll('.pt-badge, .pt-breakdown').forEach(el => el.remove());
-    document.querySelectorAll('[data-posttoast-scored]').forEach(el => {
-      el.removeAttribute('data-posttoast-scored');
-    });
+    console.log('[PostToast] Stopping PostToast...');
+    try {
+      PostToastObserver.destroy();
+      // Remove all badges
+      document.querySelectorAll('.pt-badge, .pt-breakdown').forEach(el => el.remove());
+      document.querySelectorAll('[data-posttoast-scored]').forEach(el => {
+        el.removeAttribute('data-posttoast-scored');
+      });
+      console.log('[PostToast] Stopped and cleaned up');
+    } catch (err) {
+      console.error('[PostToast] Error stopping:', err);
+    }
   }
 })();

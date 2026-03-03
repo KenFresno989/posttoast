@@ -19,3 +19,6 @@ function updateStatus(enabled) {
   status.textContent = enabled ? 'Active — scoring posts' : 'Paused';
   status.className = 'pt-status ' + (enabled ? 'pt-active' : 'pt-paused');
 }
+
+// Dynamically load version from manifest
+document.getElementById('version').textContent = 'v' + chrome.runtime.getManifest().version;
