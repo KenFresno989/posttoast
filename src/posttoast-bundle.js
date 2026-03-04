@@ -1730,8 +1730,10 @@ const PostToastObserver = {
 /**
  * PostToast Content Script — Entry Point
  * Initializes PostToast on LinkedIn pages.
+ * All modules (Rubric, Signals, Scorer, Extractor, Badge, Breakdown, Observer)
+ * are declared above in the same file scope.
  */
-// PostToast Entry Point
+
 console.log('[PostToast] Content script loaded', {
   version: chrome.runtime.getManifest().version,
   url: window.location.href,
@@ -1743,14 +1745,25 @@ let _ptEnabled = true;
 function _ptInit() {
   console.log('[PostToast] Initializing...');
 
+  // Verify all modules are accessible
+  const modules = { PostToastRubric, PostToastSignals, PostToastScorer, PostToastExtractor, PostToastBadge, PostToastBreakdown, PostToastObserver };
+  const missing = Object.entries(modules).filter(([k, v]) => !v).map(([k]) => k);
+  if (missing.length > 0) {
+    console.error('[PostToast] FATAL: Missing modules:', missing);
+    return;
+  }
+  console.log('[PostToast] All modules loaded');
+
+  // Check if extension is enabled
   chrome.storage.sync.get(['posttoast_enabled'], (result) => {
-    _ptEnabled = result.posttoast_enabled !== false;
+    _ptEnabled = result.posttoast_enabled !== false; // default to true
     console.log('[PostToast] Extension enabled:', _ptEnabled);
     if (_ptEnabled) {
       _ptStart();
     }
   });
 
+  // Listen for toggle from popup
   chrome.storage.onChanged.addListener((changes) => {
     if (changes.posttoast_enabled) {
       _ptEnabled = changes.posttoast_enabled.newValue;
@@ -1765,13 +1778,14 @@ function _ptInit() {
 }
 
 function _ptStart() {
-  console.log('[PostToast] Starting PostToast observer...');
+  console.log('[PostToast] Starting observer...');
   try {
+    // Wait for feed to load
     const checkFeed = setInterval(() => {
       try {
         const posts = PostToastExtractor.getAllPosts();
         if (posts.length > 0 || document.querySelector('main')) {
-          console.log('[PostToast] Feed found, initializing observer. Posts found:', posts.length);
+          console.log('[PostToast] Feed found, posts:', posts.length);
           clearInterval(checkFeed);
           PostToastObserver.init();
         }
@@ -1780,6 +1794,7 @@ function _ptStart() {
       }
     }, 500);
 
+    // Safety: stop checking after 30 seconds
     setTimeout(() => {
       clearInterval(checkFeed);
       console.log('[PostToast] Feed check timeout reached');
@@ -1790,7 +1805,7 @@ function _ptStart() {
 }
 
 function _ptStop() {
-  console.log('[PostToast] Stopping PostToast...');
+  console.log('[PostToast] Stopping...');
   try {
     PostToastObserver.destroy();
     document.querySelectorAll('.pt-badge, .pt-breakdown').forEach(el => el.remove());
@@ -1803,6 +1818,7 @@ function _ptStop() {
   }
 }
 
+// Start when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', _ptInit);
 } else {
