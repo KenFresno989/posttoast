@@ -1,5 +1,111 @@
 // Copyright (c) 2026 PostToast. All rights reserved.
 /**
+ * PostToast Scoring Rubric
+ * Weights and thresholds for all cringe signals.
+ * Tunable — adjust these to calibrate the scoring engine.
+ */
+const PostToastRubric = {
+  // Score labels for each whole number
+  labels: {
+    0: 'Genuine Human',
+    1: 'Mostly Clean',
+    2: 'Slight Whiff',
+    3: 'Getting Warm',
+    4: 'Corporate Smell',
+    5: 'Half Bullshit',
+    6: 'Mostly Theater',
+    7: 'Full Cringe',
+    8: 'Peak LinkedIn',
+    9: 'Weapons-Grade',
+    10: 'Pure Uncut BS'
+  },
+
+  getLabel(score) {
+    return this.labels[Math.min(10, Math.floor(score))] || 'Off the Charts';
+  },
+
+  // Tier 1: Heavy Hitters
+  tier1: {
+    fabricatedParable: { points: 2.5, icon: '📖', label: 'Fabricated Parable' },
+    firingGenre: { points: 2.0, icon: '🔥', label: 'The Firing Genre' },
+    privilegeVulnerability: { points: 2.0, icon: '😢', label: 'Crying in My Tesla' },
+    stolenValor: { points: 2.0, icon: '🎭', label: 'Stolen Valor Story' }
+  },
+
+  // Tier 2: Core Cringe
+  tier2: {
+    humbleBrag: { points: 2.0, icon: '🙏', label: 'Humble Brag' },
+    thoughtLeader: { points: 1.75, icon: '🎪', label: 'Thought Leader Cosplay' },
+    engagementBait: { points: 1.5, icon: '🎣', label: 'Agreephishing' },
+    toxicPositivity: { points: 1.5, icon: '🌈', label: 'Toxic Positivity' },
+    nameDrop: { points: 1.0, icon: '📛', label: 'Name Dropping' },
+    selflessHiring: { points: 1.25, icon: '🦸', label: 'Selfless Hiring Post' },
+    garySpeech: { points: 1.0, icon: '🎤', label: 'Hustle Porn' },
+    humblebait: { points: 1.0, icon: '🪤', label: 'Humblebait' },
+    gratitudeTheater: { points: 1.0, icon: '🎭', label: 'Gratitude Theater' },
+    traumaFlex: { points: 1.5, icon: '💪', label: 'Trauma Flexing' },
+    echoChamber: { points: 1.0, icon: '🔄', label: 'Echo Chamber' },
+    pivotBrag: { points: 1.25, icon: '🏃', label: 'The Pivot Brag' },
+    empathyCosplay: { points: 1.5, icon: '🥺', label: 'Empathy Cosplay' },
+    linkedInfluencer: { points: 1.0, icon: '👻', label: 'LinkedInfluencer' }
+  },
+
+  // Tier 3: Seasoning
+  tier3: {
+    emojiAbuse: { points: 0.75, icon: '😬', label: 'Emoji Abuse' },
+    broetry: { points: 1.5, icon: '📝', label: 'Broetry' },
+    corporateJargon: { points: 1.0, icon: '💼', label: 'Corporate Jargon' },
+    narcissismIndex: { points: 1.0, icon: '🪞', label: 'Narcissism Index' },
+    dramaticBreaks: { points: 0.75, icon: '⏸️', label: 'Dramatic Line Breaks' },
+    hashtagSpam: { points: 0.75, icon: '#️⃣', label: 'Hashtag Spam' },
+    corporateHaiku: { points: 0.75, icon: '🏯', label: 'Corporate Haiku' },
+    selfiSermon: { points: 0.5, icon: '🤳', label: 'Selfie Sermon' },
+    recruiterBait: { points: 0.5, icon: '🎯', label: 'Recruiter Bait' }
+  },
+
+  // Roast headlines per score bracket
+  roastHeadlines: {
+    0: 'Disgustingly authentic',
+    1: 'Barely toasted. Almost sincere.',
+    2: 'Minor seasoning detected',
+    3: 'The LinkedIn is starting to show',
+    4: 'Corporate smell is getting strong',
+    5: 'The LinkedIn is strong with this one',
+    6: 'Corporate cringe with a side of hustle',
+    7: 'Screenshot this for the group chat',
+    8: 'Weapons-grade thought leadership',
+    9: 'Gary Vee would be proud',
+    10: 'The final boss of LinkedIn'
+  },
+
+  getRoastHeadline(score) {
+    return this.roastHeadlines[Math.min(10, Math.floor(score))] || 'Off the charts';
+  },
+
+  // Negative signals (reduce score)
+  negative: {
+    hasLinks: { points: -1.0, icon: '🔗', label: 'Shares Resources' },
+    hasCode: { points: -2.0, icon: '💻', label: 'Technical Content' },
+    shortFactual: { points: -2.0, icon: '📌', label: 'Short & Factual' },
+    sharesOthers: { points: -1.0, icon: '🤝', label: 'Celebrates Others' }
+  },
+
+  // Compound multiplier: when 3+ Tier 2 signals stack
+  compoundThreshold: 2,
+  compoundMultiplier: 1.3,
+
+  // Thresholds
+  thresholds: {
+    emojiDensity: 0.015,      // emojis per character (loosened)
+    narcissismDensity: 0.04,  // I/me/my per word (loosened)
+    broetryRatio: 0.45,       // % of paragraphs that are single sentences (loosened)
+    hashtagCount: 2,          // hashtags to trigger (was 3)
+    shortPostLength: 100,     // chars for "short factual"
+    jargonCount: 2            // jargon words to trigger (was 3)
+  }
+};
+// Copyright (c) 2026 PostToast. All rights reserved.
+/**
  * PostToast Signal Detectors
  * Each detector returns { detected: bool, points: number, detail: string } or null
  */
@@ -1155,3 +1261,578 @@ const PostToastSignals = {
     return results;
   }
 };
+// Copyright (c) 2026 PostToast. All rights reserved.
+/**
+ * PostToast Scoring Engine
+ * Combines signal detections into a final 0-10 score with quarter-point precision.
+ */
+const PostToastScorer = {
+
+  score(text) {
+    const signals = PostToastSignals.analyzeAll(text);
+
+    let rawScore = 0;
+    const positiveSignals = [];
+    const negativeSignals = [];
+
+    for (const signal of signals) {
+      rawScore += signal.points;
+      if (signal.points > 0) {
+        positiveSignals.push(signal);
+      } else {
+        negativeSignals.push(signal);
+      }
+    }
+
+    // Count Tier 2 hits for compound multiplier
+    const tier2Detectors = [
+      'Humble Brag', 'Thought Leader Cosplay', 'Agreephishing',
+      'Toxic Positivity', 'Name Dropping', 'Selfless Hiring Post', 'Hustle Porn',
+      'Humblebait', 'Gratitude Theater', 'Trauma Flexing', 'Echo Chamber',
+      'The Pivot Brag', 'Empathy Cosplay', 'LinkedInfluencer'
+    ];
+    const tier2Count = positiveSignals.filter(s => tier2Detectors.includes(s.label)).length;
+
+    if (tier2Count >= PostToastRubric.compoundThreshold) {
+      rawScore *= PostToastRubric.compoundMultiplier;
+    }
+
+    // Round to nearest 0.25
+    const finalScore = Math.max(0, Math.min(10, Math.round(rawScore * 4) / 4));
+
+    const label = PostToastRubric.getLabel(finalScore);
+
+    return {
+      score: finalScore,
+      label,
+      signals: positiveSignals.sort((a, b) => b.points - a.points),
+      negativeSignals,
+      allSignals: signals,
+      tier2Compound: tier2Count >= PostToastRubric.compoundThreshold,
+      tier2Count
+    };
+  },
+
+  getColor(score) {
+    if (score <= 3) return '#22c55e';   // green
+    if (score <= 6) return '#eab308';   // yellow/amber
+    return '#ef4444';                    // red
+  },
+
+  getColorClass(score) {
+    if (score <= 3) return 'pt-green';
+    if (score <= 6) return 'pt-amber';
+    return 'pt-red';
+  }
+};
+// Copyright (c) 2026 PostToast. All rights reserved.
+/**
+ * PostToast DOM Extractor
+ * Extracts post text from LinkedIn's DOM using cascading selectors.
+ */
+const PostToastExtractor = {
+
+  // Cascading selectors — most stable first
+  SELECTORS: {
+    postContainer: [
+      '[data-urn^="urn:li:activity"]',
+      '[data-urn^="urn:li:aggregate"]',
+      '.feed-shared-update-v2',
+      '.occludable-update',
+      '.feed-shared-update-v2__content',
+      '.update-components-update'
+    ],
+    postText: [
+      '.feed-shared-text span[dir="ltr"]',
+      '.feed-shared-update-v2__description span[dir="ltr"]',
+      '.break-words span[dir="ltr"]',
+      '.feed-shared-text',
+      '.update-components-text span[dir="ltr"]',
+      '.update-components-text .break-words',
+      '.feed-shared-inline-show-more-text span[dir="ltr"]',
+      '.feed-shared-update-v2__commentary span[dir="ltr"]',
+      '.feed-shared-update-v2__commentary .break-words'
+    ],
+    postAuthor: [
+      '.feed-shared-actor__name span[aria-hidden="true"]',
+      '.update-components-actor__name span[aria-hidden="true"]',
+      '.feed-shared-actor__name'
+    ]
+  },
+
+  findPostContainer(element) {
+    for (const selector of this.SELECTORS.postContainer) {
+      const container = element.closest(selector);
+      if (container) return container;
+    }
+    return null;
+  },
+
+  getAllPosts() {
+    for (const selector of this.SELECTORS.postContainer) {
+      const posts = document.querySelectorAll(selector);
+      if (posts.length > 0) return Array.from(posts);
+    }
+    return [];
+  },
+
+  extractText(postElement) {
+    for (const selector of this.SELECTORS.postText) {
+      const elements = postElement.querySelectorAll(selector);
+      if (elements.length > 0) {
+        return Array.from(elements)
+          .map(el => el.innerText || el.textContent)
+          .join('\n')
+          .trim();
+      }
+    }
+    // Fallback: try to get any substantial text content
+    const allText = postElement.innerText || '';
+    return allText.length > 50 ? allText : '';
+  },
+
+  extractAuthor(postElement) {
+    for (const selector of this.SELECTORS.postAuthor) {
+      const el = postElement.querySelector(selector);
+      if (el) return (el.innerText || el.textContent || '').trim();
+    }
+    return 'Unknown';
+  },
+
+  getPostUrn(postElement) {
+    const urn = postElement.getAttribute('data-urn');
+    if (urn) return urn;
+    // Try to find URN in child elements
+    const urnEl = postElement.querySelector('[data-urn]');
+    return urnEl ? urnEl.getAttribute('data-urn') : null;
+  }
+};
+// Copyright (c) 2026 PostToast. All rights reserved.
+/**
+ * PostToast Badge
+ * Injects score badges into LinkedIn posts.
+ */
+const PostToastBadge = {
+
+  BADGE_ATTR: 'data-posttoast-scored',
+
+  isScored(postElement) {
+    return postElement.hasAttribute(this.BADGE_ATTR);
+  },
+
+  markScored(postElement) {
+    postElement.setAttribute(this.BADGE_ATTR, 'true');
+  },
+
+  create(result, postElement) {
+    const badge = document.createElement('div');
+    badge.className = `pt-badge ${PostToastScorer.getColorClass(result.score)}`;
+
+    const scoreDisplay = result.score % 1 === 0 ? result.score.toFixed(0) : result.score.toFixed(result.score % 0.5 === 0 ? 1 : 2);
+
+    badge.innerHTML = `<span class="pt-badge-icon">🍞</span><span class="pt-badge-score">${scoreDisplay}</span>`;
+    badge.title = `PostToast: ${result.label}`;
+
+    badge.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      PostToastBreakdown.toggle(result, postElement, badge);
+    });
+
+    return badge;
+  },
+
+  inject(postElement, result) {
+    if (this.isScored(postElement)) return;
+
+    const badge = this.create(result, postElement);
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position: relative; display: inline-flex;';
+    wrapper.appendChild(badge);
+
+    // Strategy: place after the actor/header section so it's visible at top of post
+    const header = postElement.querySelector('.feed-shared-actor')
+      || postElement.querySelector('.update-components-actor')
+      || postElement.querySelector('[class*="actor"]');
+
+    if (header) {
+      // Insert a row right after the header
+      const row = document.createElement('div');
+      row.style.cssText = 'display: flex; justify-content: flex-end; padding: 4px 16px 0; position: relative;';
+      row.appendChild(wrapper);
+      header.insertAdjacentElement('afterend', row);
+    } else {
+      // Fallback: prepend to the post as a floating badge
+      const row = document.createElement('div');
+      row.style.cssText = 'display: flex; justify-content: flex-end; padding: 4px 16px 0; position: relative;';
+      row.appendChild(wrapper);
+      postElement.prepend(row);
+    }
+
+    this.markScored(postElement);
+  },
+
+  scorePost(postElement) {
+    if (this.isScored(postElement)) return;
+
+    const text = PostToastExtractor.extractText(postElement);
+    if (!text || text.length < 20) return; // Skip empty/tiny posts
+
+    const result = PostToastScorer.score(text);
+    this.inject(postElement, result);
+  }
+};
+// Copyright (c) 2026 PostToast. All rights reserved.
+/**
+ * PostToast Breakdown Panel
+ * Shows detailed signal breakdown when badge is clicked.
+ */
+const PostToastBreakdown = {
+
+  activePanel: null,
+
+  toggle(result, postElement, badge) {
+    // Close existing panel
+    if (this.activePanel) {
+      this.activePanel.remove();
+      if (this.activePanel._parentPost === postElement) {
+        this.activePanel = null;
+        return;
+      }
+      this.activePanel = null;
+    }
+
+    const panel = this.create(result);
+    panel._parentPost = postElement;
+
+    // Position below the badge — append to badge's parent wrapper
+    const wrapper = badge.parentElement;
+    if (wrapper) {
+      wrapper.appendChild(panel);
+    } else {
+      badge.insertAdjacentElement('afterend', panel);
+    }
+    this.activePanel = panel;
+
+    // Close on outside click
+    const closeHandler = (e) => {
+      if (!panel.contains(e.target) && !badge.contains(e.target)) {
+        panel.remove();
+        this.activePanel = null;
+        document.removeEventListener('click', closeHandler);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', closeHandler), 10);
+  },
+
+  create(result) {
+    const panel = document.createElement('div');
+    panel.className = 'pt-breakdown';
+
+    const roastHeadline = PostToastRubric.getRoastHeadline(result.score);
+
+    let html = `
+      <div class="pt-breakdown-header">
+        <span class="pt-breakdown-title">PostToast Breakdown</span>
+        <span class="pt-breakdown-label ${PostToastScorer.getColorClass(result.score)}">${result.label}</span>
+      </div>
+      <div class="pt-roast-headline ${PostToastScorer.getColorClass(result.score)}">${roastHeadline}</div>
+      <div class="pt-breakdown-signals">
+    `;
+
+    // Positive signals
+    for (const signal of result.signals) {
+      const scoreStr = '+' + (signal.points % 1 === 0 ? signal.points.toFixed(0) : signal.points.toFixed(signal.points % 0.5 === 0 ? 1 : 2));
+      html += `
+        <div class="pt-signal-row">
+          <div class="pt-signal-info">
+            <span class="pt-signal-icon">${signal.icon}</span>
+            <span class="pt-signal-name">${signal.label}</span>
+          </div>
+          <span class="pt-signal-points ${PostToastScorer.getColorClass(signal.points * 2)}">${scoreStr}</span>
+        </div>
+        <div class="pt-signal-detail">${signal.detail}</div>
+      `;
+    }
+
+    // Negative signals
+    for (const signal of result.negativeSignals) {
+      const scoreStr = signal.points.toFixed(signal.points % 1 === 0 ? 0 : 1);
+      html += `
+        <div class="pt-signal-row">
+          <div class="pt-signal-info">
+            <span class="pt-signal-icon">${signal.icon}</span>
+            <span class="pt-signal-name">${signal.label}</span>
+          </div>
+          <span class="pt-signal-points pt-green">${scoreStr}</span>
+        </div>
+        <div class="pt-signal-detail">${signal.detail}</div>
+      `;
+    }
+
+    // Compound multiplier note
+    if (result.tier2Compound) {
+      html += `
+        <div class="pt-compound-note">
+          ⚠️ Compound multiplier: ${result.tier2Count} core cringe signals stacking (×${PostToastRubric.compoundMultiplier})
+        </div>
+      `;
+    }
+
+    // Low score celebration
+    if (result.signals.length === 0) {
+      html += `
+        <div class="pt-genuine-notice">
+          🫡 No signals detected. This person just... said something real. Respect.
+        </div>
+      `;
+    }
+
+    // Total
+    const scoreDisplay = result.score % 1 === 0 ? result.score.toFixed(0) : result.score.toFixed(result.score % 0.5 === 0 ? 1 : 2);
+    html += `
+      </div>
+      <div class="pt-breakdown-total">
+        <span>Total</span>
+        <span class="pt-total-score ${PostToastScorer.getColorClass(result.score)}">${scoreDisplay} / 10</span>
+      </div>
+      <div class="pt-share-row">
+        <button class="pt-share-btn" id="pt-share-${Date.now()}">📋 Copy Roast</button>
+      </div>
+      <div class="pt-breakdown-footer">
+        🍞 PostToast — Roasting LinkedIn, one post at a time
+      </div>
+    `;
+
+    panel.innerHTML = html;
+
+    // Share button handler
+    const shareBtn = panel.querySelector('.pt-share-btn');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const signalList = result.signals.map(s => `${s.icon} ${s.label}: +${s.points}`).join('\n');
+        const roast = PostToastRubric.getRoastHeadline(result.score);
+        const scoreDisplay = result.score % 1 === 0 ? result.score.toFixed(0) : result.score.toFixed(result.score % 0.5 === 0 ? 1 : 2);
+        const text = `🍞 PostToast Score: ${scoreDisplay}/10 — "${roast}"\n\n${signalList}\n\nposttoast.app`;
+        navigator.clipboard.writeText(text).then(() => {
+          shareBtn.textContent = 'Copied! 🍞';
+          shareBtn.classList.add('pt-copied');
+          setTimeout(() => {
+            shareBtn.textContent = '📋 Copy Roast';
+            shareBtn.classList.remove('pt-copied');
+          }, 2000);
+        });
+      });
+    }
+
+    return panel;
+  }
+};
+// Copyright (c) 2026 PostToast. All rights reserved.
+/**
+ * PostToast Observer
+ * Watches for new posts loaded via infinite scroll and scores them.
+ */
+const PostToastObserver = {
+
+  mutationObserver: null,
+  intersectionObserver: null,
+  scoreCache: new Map(),
+
+  init() {
+    try {
+      console.log('[PostToast] Initializing observer');
+      
+      // Set up IntersectionObserver FIRST
+      this.intersectionObserver = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            try {
+              PostToastBadge.scorePost(entry.target);
+              this.intersectionObserver.unobserve(entry.target);
+            } catch (err) {
+              console.error('[PostToast] Error scoring post:', err);
+            }
+          }
+        }
+      }, { rootMargin: '200px' });
+
+      // Score all existing posts
+      this.scoreVisiblePosts();
+
+      // Watch for new posts (infinite scroll)
+      this.mutationObserver = new MutationObserver((mutations) => {
+        try {
+          let hasNewNodes = false;
+          for (const mutation of mutations) {
+            if (mutation.addedNodes.length > 0) {
+              hasNewNodes = true;
+              break;
+            }
+          }
+          if (hasNewNodes) {
+            // Debounce
+            clearTimeout(this._debounceTimer);
+            this._debounceTimer = setTimeout(() => this.scoreVisiblePosts(), 300);
+          }
+        } catch (err) {
+          console.error('[PostToast] Mutation observer error:', err);
+        }
+      });
+
+      // Observe the main feed container, or body as fallback
+      const feedContainer = document.querySelector('.scaffold-finite-scroll__content')
+        || document.querySelector('.core-rail')
+        || document.querySelector('main')
+        || document.body;
+
+      if (feedContainer) {
+        this.mutationObserver.observe(feedContainer, {
+          childList: true,
+          subtree: true
+        });
+        console.log('[PostToast] Observer started on:', feedContainer.className || 'body');
+      } else {
+        console.error('[PostToast] No feed container found');
+      }
+    } catch (err) {
+      console.error('[PostToast] Fatal error in init:', err);
+    }
+  },
+
+  scoreVisiblePosts() {
+    try {
+      const posts = PostToastExtractor.getAllPosts();
+      console.log('[PostToast] Scoring visible posts:', posts.length);
+      for (const post of posts) {
+        if (!PostToastBadge.isScored(post)) {
+          this.intersectionObserver.observe(post);
+        }
+      }
+    } catch (err) {
+      console.error('[PostToast] Error in scoreVisiblePosts:', err);
+    }
+  },
+
+  destroy() {
+    try {
+      if (this.mutationObserver) this.mutationObserver.disconnect();
+      if (this.intersectionObserver) this.intersectionObserver.disconnect();
+      clearTimeout(this._debounceTimer);
+      console.log('[PostToast] Observer destroyed');
+    } catch (err) {
+      console.error('[PostToast] Error destroying observer:', err);
+    }
+  }
+};
+// Copyright (c) 2026 PostToast. All rights reserved.
+/**
+ * PostToast Content Script — Entry Point
+ * Initializes PostToast on LinkedIn pages.
+ */
+(function() {
+  'use strict';
+
+  console.log('[PostToast] Content script loaded', {
+    version: chrome.runtime.getManifest().version,
+    url: window.location.href,
+    timestamp: new Date().toISOString()
+  });
+
+  let enabled = true;
+  const requiredModules = ['PostToastExtractor', 'PostToastObserver', 'PostToastBadge'];
+  
+  function checkDependencies() {
+    const missing = requiredModules.filter(name => typeof window[name] === 'undefined');
+    if (missing.length > 0) {
+      console.warn('[PostToast] Missing dependencies:', missing);
+      return false;
+    }
+    console.log('[PostToast] All dependencies loaded');
+    return true;
+  }
+
+  function init() {
+    // Wait for dependencies to load with retry logic
+    if (!checkDependencies()) {
+      console.log('[PostToast] Waiting for dependencies to load...');
+      setTimeout(init, 100);
+      return;
+    }
+
+    console.log('[PostToast] Initializing...');
+
+    // Check if extension is enabled
+    chrome.storage.sync.get(['posttoast_enabled'], (result) => {
+      enabled = result.posttoast_enabled !== false; // default to true
+      console.log('[PostToast] Extension enabled:', enabled);
+      if (enabled) {
+        startPostToast();
+      }
+    });
+
+    // Listen for toggle from popup
+    chrome.storage.onChanged.addListener((changes) => {
+      if (changes.posttoast_enabled) {
+        enabled = changes.posttoast_enabled.newValue;
+        console.log('[PostToast] Toggle changed:', enabled);
+        if (enabled) {
+          startPostToast();
+        } else {
+          stopPostToast();
+        }
+      }
+    });
+  }
+
+  // Start initialization when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  function startPostToast() {
+    console.log('[PostToast] Starting PostToast observer...');
+    
+    try {
+      // Wait for feed to load
+      const checkFeed = setInterval(() => {
+        try {
+          const posts = PostToastExtractor.getAllPosts();
+          if (posts.length > 0 || document.querySelector('main')) {
+            console.log('[PostToast] Feed found, initializing observer. Posts found:', posts.length);
+            clearInterval(checkFeed);
+            PostToastObserver.init();
+          }
+        } catch (err) {
+          console.error('[PostToast] Error checking feed:', err);
+        }
+      }, 500);
+
+      // Safety: stop checking after 30 seconds
+      setTimeout(() => {
+        clearInterval(checkFeed);
+        console.log('[PostToast] Feed check timeout reached');
+      }, 30000);
+    } catch (err) {
+      console.error('[PostToast] Fatal error in startPostToast:', err);
+    }
+  }
+
+  function stopPostToast() {
+    console.log('[PostToast] Stopping PostToast...');
+    try {
+      PostToastObserver.destroy();
+      // Remove all badges
+      document.querySelectorAll('.pt-badge, .pt-breakdown').forEach(el => el.remove());
+      document.querySelectorAll('[data-posttoast-scored]').forEach(el => {
+        el.removeAttribute('data-posttoast-scored');
+      });
+      console.log('[PostToast] Stopped and cleaned up');
+    } catch (err) {
+      console.error('[PostToast] Error stopping:', err);
+    }
+  }
+})();
