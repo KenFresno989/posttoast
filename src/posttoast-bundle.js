@@ -1731,90 +1731,80 @@ const PostToastObserver = {
  * PostToast Content Script — Entry Point
  * Initializes PostToast on LinkedIn pages.
  */
-(function() {
-  'use strict';
+// PostToast Entry Point
+console.log('[PostToast] Content script loaded', {
+  version: chrome.runtime.getManifest().version,
+  url: window.location.href,
+  timestamp: new Date().toISOString()
+});
 
-  console.log('[PostToast] Content script loaded', {
-    version: chrome.runtime.getManifest().version,
-    url: window.location.href,
-    timestamp: new Date().toISOString()
+let _ptEnabled = true;
+
+function _ptInit() {
+  console.log('[PostToast] Initializing...');
+
+  chrome.storage.sync.get(['posttoast_enabled'], (result) => {
+    _ptEnabled = result.posttoast_enabled !== false;
+    console.log('[PostToast] Extension enabled:', _ptEnabled);
+    if (_ptEnabled) {
+      _ptStart();
+    }
   });
 
-  let enabled = true;
-
-  function init() {
-    console.log('[PostToast] Initializing...');
-
-    // Check if extension is enabled
-    chrome.storage.sync.get(['posttoast_enabled'], (result) => {
-      enabled = result.posttoast_enabled !== false; // default to true
-      console.log('[PostToast] Extension enabled:', enabled);
-      if (enabled) {
-        startPostToast();
+  chrome.storage.onChanged.addListener((changes) => {
+    if (changes.posttoast_enabled) {
+      _ptEnabled = changes.posttoast_enabled.newValue;
+      console.log('[PostToast] Toggle changed:', _ptEnabled);
+      if (_ptEnabled) {
+        _ptStart();
+      } else {
+        _ptStop();
       }
-    });
+    }
+  });
+}
 
-    // Listen for toggle from popup
-    chrome.storage.onChanged.addListener((changes) => {
-      if (changes.posttoast_enabled) {
-        enabled = changes.posttoast_enabled.newValue;
-        console.log('[PostToast] Toggle changed:', enabled);
-        if (enabled) {
-          startPostToast();
-        } else {
-          stopPostToast();
+function _ptStart() {
+  console.log('[PostToast] Starting PostToast observer...');
+  try {
+    const checkFeed = setInterval(() => {
+      try {
+        const posts = PostToastExtractor.getAllPosts();
+        if (posts.length > 0 || document.querySelector('main')) {
+          console.log('[PostToast] Feed found, initializing observer. Posts found:', posts.length);
+          clearInterval(checkFeed);
+          PostToastObserver.init();
         }
+      } catch (err) {
+        console.error('[PostToast] Error checking feed:', err);
       }
+    }, 500);
+
+    setTimeout(() => {
+      clearInterval(checkFeed);
+      console.log('[PostToast] Feed check timeout reached');
+    }, 30000);
+  } catch (err) {
+    console.error('[PostToast] Fatal error in _ptStart:', err);
+  }
+}
+
+function _ptStop() {
+  console.log('[PostToast] Stopping PostToast...');
+  try {
+    PostToastObserver.destroy();
+    document.querySelectorAll('.pt-badge, .pt-breakdown').forEach(el => el.remove());
+    document.querySelectorAll('[data-posttoast-scored]').forEach(el => {
+      el.removeAttribute('data-posttoast-scored');
     });
+    console.log('[PostToast] Stopped and cleaned up');
+  } catch (err) {
+    console.error('[PostToast] Error stopping:', err);
   }
+}
 
-  // Start initialization when DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-
-  function startPostToast() {
-    console.log('[PostToast] Starting PostToast observer...');
-    
-    try {
-      // Wait for feed to load
-      const checkFeed = setInterval(() => {
-        try {
-          const posts = PostToastExtractor.getAllPosts();
-          if (posts.length > 0 || document.querySelector('main')) {
-            console.log('[PostToast] Feed found, initializing observer. Posts found:', posts.length);
-            clearInterval(checkFeed);
-            PostToastObserver.init();
-          }
-        } catch (err) {
-          console.error('[PostToast] Error checking feed:', err);
-        }
-      }, 500);
-
-      // Safety: stop checking after 30 seconds
-      setTimeout(() => {
-        clearInterval(checkFeed);
-        console.log('[PostToast] Feed check timeout reached');
-      }, 30000);
-    } catch (err) {
-      console.error('[PostToast] Fatal error in startPostToast:', err);
-    }
-  }
-
-  function stopPostToast() {
-    console.log('[PostToast] Stopping PostToast...');
-    try {
-      PostToastObserver.destroy();
-      // Remove all badges
-      document.querySelectorAll('.pt-badge, .pt-breakdown').forEach(el => el.remove());
-      document.querySelectorAll('[data-posttoast-scored]').forEach(el => {
-        el.removeAttribute('data-posttoast-scored');
-      });
-      console.log('[PostToast] Stopped and cleaned up');
-    } catch (err) {
-      console.error('[PostToast] Error stopping:', err);
-    }
-  }
-})();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _ptInit);
+} else {
+  _ptInit();
+}
