@@ -26,7 +26,7 @@ const PostToastScorer = {
       'Humble Brag', 'Thought Leader Cosplay', 'Agreephishing',
       'Toxic Positivity', 'Name Dropping', 'Selfless Hiring Post', 'Hustle Porn',
       'Humblebait', 'Gratitude Theater', 'Trauma Flexing', 'Echo Chamber',
-      'The Pivot Brag', 'Empathy Cosplay', 'LinkedInfluencer'
+      'The Pivot Brag', 'Empathy Cosplay', 'LinkedInfluencer', 'Credentialed Rant'
     ];
     const tier2Count = positiveSignals.filter(s => tier2Detectors.includes(s.label)).length;
 

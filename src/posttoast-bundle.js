@@ -47,7 +47,8 @@ const PostToastRubric = {
     echoChamber: { points: 1.0, icon: '🔄', label: 'Echo Chamber' },
     pivotBrag: { points: 1.25, icon: '🏃', label: 'The Pivot Brag' },
     empathyCosplay: { points: 1.5, icon: '🥺', label: 'Empathy Cosplay' },
-    linkedInfluencer: { points: 1.0, icon: '👻', label: 'LinkedInfluencer' }
+    linkedInfluencer: { points: 1.0, icon: '👻', label: 'LinkedInfluencer' },
+    credentialedRant: { points: 1.5, icon: '🎓', label: 'Credentialed Rant' }
   },
 
   // Tier 3: Seasoning
@@ -435,6 +436,33 @@ const PostToastSignals = {
     if (patterns.some(p => p.test(text))) {
       const r = PostToastRubric.tier2.linkedInfluencer;
       return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: 'Borrowing clout from people you probably never met' };
+    }
+    return null;
+  },
+
+  detectCredentialedRant(text) {
+    // Professional invokes their own expertise to amplify a personal complaint into content
+    // Key: detect the STRUCTURE (credential + complaint + sermon), not specific job titles
+    const credential = /(?:as (?:a|an|someone who|someone in|someone with|a former) [\w\s]{2,30}(?:professional|expert|specialist|consultant|leader|manager|director|strategist|coach|trainer|engineer|designer|developer|analyst|researcher|scientist|writer|editor|executive|officer|head of|vp of|with \d+|who (?:has|have) (?:spent|worked|been|built|led|managed|run)))|(?:with (?:over |more than )?\d+\s*(?:\+\s*)?years? (?:in|of|doing|building|leading|managing|running))|(?:(?:having|after) (?:spent|worked|built|led|managed|run) (?:the (?:last|past) )?\d+\s*(?:\+\s*)?years?)|(?:in my \d+\s*(?:\+\s*)?years? (?:of|in|as|doing))|(?:as someone who (?:has |have )?(?:spent|worked|built|led|managed|run|been|trained|coached|hired|recruited))/i;
+
+    const personalOutrage = /(?:i (?:was|am|couldn'?t (?:believe|help)|can'?t (?:believe|help)|have never been)\s+(?:shocked|appalled|stunned|amazed|horrified|disappointed|floored|baffled|dumbfounded|furious|blown away|disgusted|astounded))|(?:(?:shocked|appalled|stunned|amazed|horrified|disappointed|floored|baffled|furious|disgusted) (?:by|at|when|to see|to find|to learn|to hear|to discover|that))|(?:i (?:could ?n'?t|can'?t) believe (?:what|how|that|this|i ))|(?:imagine my (?:surprise|shock|horror|disappointment))/i;
+
+    const sermon = /(?:here'?s (?:the thing|what|why|how)|this is (?:why|what|how|exactly)|(?:leaders?|companies|brands?|businesses?|teams?),?\s*(?:do|be|stop|start|please|take note|listen|pay attention|need to|should|must))|(?:(?:do|be|stop|please) (?:better|different))|(?:it'?s (?:not (?:that|rocket)|really not that) (?:hard|difficult|complicated))|(?:(?:the lesson|the takeaway|what (?:they|this|we) should|let this (?:be|serve|sink)))/i;
+
+    const hasCredential = credential.test(text);
+    const hasOutrage = personalOutrage.test(text);
+    const hasSermon = sermon.test(text);
+
+    // Require credential + outrage (the core pattern)
+    // Sermon alone with credential is just thought leadership (caught elsewhere)
+    // Outrage is the key differentiator that makes this performative
+    if (hasCredential && hasOutrage) {
+      const r = PostToastRubric.tier2.credentialedRant;
+      const pts = hasSermon ? r.points + 0.5 : r.points;
+      const detail = hasSermon
+        ? 'Credential + personal outrage + unsolicited sermon — the full trifecta'
+        : 'Invoking professional expertise to amplify a personal complaint';
+      return { detected: true, points: pts, icon: r.icon, label: r.label, detail };
     }
     return null;
   },
@@ -1226,7 +1254,7 @@ const PostToastSignals = {
       'detectHumbleBrag', 'detectThoughtLeader', 'detectEngagementBait', 'detectToxicPositivity',
       'detectNameDrop', 'detectSelflessHiring', 'detectMotivationalSpeech',
       'detectHumblebait', 'detectGratitudeTheater', 'detectTraumaFlex', 'detectEchoChamber',
-      'detectPivotBrag', 'detectEmpathyCosplay', 'detectLinkedInfluencer',
+      'detectPivotBrag', 'detectEmpathyCosplay', 'detectLinkedInfluencer', 'detectCredentialedRant',
       // Tier 3
       'detectEmojiAbuse', 'detectBroetry', 'detectCorporateJargon', 'detectNarcissismIndex',
       'detectDramaticBreaks', 'detectHashtagSpam', 'detectCorporateHaiku', 'detectSelfieSermon',
@@ -1289,7 +1317,7 @@ const PostToastScorer = {
       'Humble Brag', 'Thought Leader Cosplay', 'Agreephishing',
       'Toxic Positivity', 'Name Dropping', 'Selfless Hiring Post', 'Hustle Porn',
       'Humblebait', 'Gratitude Theater', 'Trauma Flexing', 'Echo Chamber',
-      'The Pivot Brag', 'Empathy Cosplay', 'LinkedInfluencer'
+      'The Pivot Brag', 'Empathy Cosplay', 'LinkedInfluencer', 'Credentialed Rant'
     ];
     const tier2Count = positiveSignals.filter(s => tier2Detectors.includes(s.label)).length;
 

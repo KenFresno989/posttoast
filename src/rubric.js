@@ -47,7 +47,8 @@ const PostToastRubric = {
     echoChamber: { points: 1.0, icon: '🔄', label: 'Echo Chamber' },
     pivotBrag: { points: 1.25, icon: '🏃', label: 'The Pivot Brag' },
     empathyCosplay: { points: 1.5, icon: '🥺', label: 'Empathy Cosplay' },
-    linkedInfluencer: { points: 1.0, icon: '👻', label: 'LinkedInfluencer' }
+    linkedInfluencer: { points: 1.0, icon: '👻', label: 'LinkedInfluencer' },
+    credentialedRant: { points: 1.5, icon: '🎓', label: 'Credentialed Rant' }
   },
 
   // Tier 3: Seasoning
