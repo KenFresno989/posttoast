@@ -1741,26 +1741,8 @@ const PostToastObserver = {
   });
 
   let enabled = true;
-  const requiredModules = ['PostToastExtractor', 'PostToastObserver', 'PostToastBadge'];
-  
-  function checkDependencies() {
-    const missing = requiredModules.filter(name => typeof window[name] === 'undefined');
-    if (missing.length > 0) {
-      console.warn('[PostToast] Missing dependencies:', missing);
-      return false;
-    }
-    console.log('[PostToast] All dependencies loaded');
-    return true;
-  }
 
   function init() {
-    // Wait for dependencies to load with retry logic
-    if (!checkDependencies()) {
-      console.log('[PostToast] Waiting for dependencies to load...');
-      setTimeout(init, 100);
-      return;
-    }
-
     console.log('[PostToast] Initializing...');
 
     // Check if extension is enabled
