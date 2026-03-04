@@ -1707,7 +1707,12 @@ const PostToastObserver = {
       console.log('[PostToast] Scoring visible posts:', posts.length);
       for (const post of posts) {
         if (!PostToastBadge.isScored(post)) {
-          this.intersectionObserver.observe(post);
+          // Score directly — don't gate on IntersectionObserver
+          try {
+            PostToastBadge.scorePost(post);
+          } catch (err) {
+            console.error('[PostToast] Error scoring post:', err);
+          }
         }
       }
     } catch (err) {
