@@ -1,7 +1,8 @@
 // Copyright (c) 2026 PostToast. All rights reserved.
 /**
- * PostToast Observer
+ * PostToast Observer v1.4.0
  * Watches for new posts loaded via infinite scroll and scores them.
+ * Uses PostToastExtractor's feed wrapper detection for scoped observation.
  */
 const PostToastObserver = {
 
@@ -50,20 +51,22 @@ const PostToastObserver = {
         }
       });
 
-      // Observe the main feed container, or body as fallback
-      const feedContainer = document.querySelector('.scaffold-finite-scroll__content')
-        || document.querySelector('.core-rail')
-        || document.querySelector('main')
-        || document.body;
+      // Use extractor's feed root detection instead of hardcoded selectors
+      const feedContainer = PostToastExtractor.getFeedRoot();
 
-      if (feedContainer) {
+      if (feedContainer && feedContainer !== document.body) {
         this.mutationObserver.observe(feedContainer, {
           childList: true,
           subtree: true
         });
-        console.log('[PostToast] Observer started on:', feedContainer.className || 'body');
+        console.log('[PostToast] Observer started on:', feedContainer.className || feedContainer.tagName);
       } else {
-        console.error('[PostToast] No feed container found');
+        // Fallback to body
+        this.mutationObserver.observe(document.body, {
+          childList: true,
+          subtree: true
+        });
+        console.log('[PostToast] Observer started on: document.body (fallback)');
       }
     } catch (err) {
       console.error('[PostToast] Fatal error in init:', err);
@@ -73,10 +76,10 @@ const PostToastObserver = {
   scoreVisiblePosts() {
     try {
       const posts = PostToastExtractor.getAllPosts();
-      console.log('[PostToast] Scoring visible posts:', posts.length);
+      const strategy = PostToastExtractor.getLastStrategy();
+      console.log(`[PostToast] Scoring ${posts.length} posts (strategy: ${strategy})`);
       for (const post of posts) {
         if (!PostToastBadge.isScored(post)) {
-          // Score directly — don't gate on IntersectionObserver
           try {
             PostToastBadge.scorePost(post);
           } catch (err) {

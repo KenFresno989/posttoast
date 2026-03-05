@@ -1,56 +1,237 @@
 // Copyright (c) 2026 PostToast. All rights reserved.
 /**
- * PostToast DOM Extractor
- * Extracts post text from LinkedIn's DOM using cascading selectors.
+ * PostToast DOM Extractor v1.4.0
+ * Resilient layered selector approach for LinkedIn's A/B-tested DOM.
+ *
+ * Strategy layers (tried in order):
+ *   Layer 1 — URN-based selectors (data-urn, data-id)
+ *   Layer 2 — CSS class selectors (feed-shared-update-v2, occludable-update, etc.)
+ *   Layer 3 — Structural detection fallback (walk DOM for repeated containers)
+ *
+ * Feed wrapper detection scopes queries to the main feed area first.
  */
 const PostToastExtractor = {
 
-  // Cascading selectors — most stable first
-  SELECTORS: {
-    postContainer: [
+  // ── Feed wrapper selectors (most specific → universal) ──
+  FEED_WRAPPERS: [
+    'div[data-testid="mainFeed"]',
+    'div[componentkey*="mainFeed"]',
+    '.scaffold-finite-scroll--infinite',
+    '.scaffold-finite-scroll__content',
+    'ol.feed-container',
+    '.core-rail',
+    'main'
+  ],
+
+  // ── Post container selectors by layer ──
+  LAYERS: {
+    // Layer 1: URN-based (most stable across A/B tests)
+    urn: [
       '[data-urn^="urn:li:activity"]',
+      '[data-id^="urn:li:activity"]',
       '[data-urn^="urn:li:aggregate"]',
+      '[data-id^="urn:li:aggregate"]'
+    ],
+    // Layer 2: CSS class selectors (change every 2-4 weeks)
+    css: [
       '.feed-shared-update-v2',
       '.occludable-update',
-      '.feed-shared-update-v2__content',
-      '.update-components-update'
+      '.update-components-update',
+      'article[data-id="main-feed-card"]'
     ],
-    postText: [
-      '.feed-shared-text span[dir="ltr"]',
-      '.feed-shared-update-v2__description span[dir="ltr"]',
-      '.break-words span[dir="ltr"]',
-      '.feed-shared-text',
-      '.update-components-text span[dir="ltr"]',
-      '.update-components-text .break-words',
-      '.feed-shared-inline-show-more-text span[dir="ltr"]',
-      '.feed-shared-update-v2__commentary span[dir="ltr"]',
-      '.feed-shared-update-v2__commentary .break-words'
-    ],
-    postAuthor: [
-      '.feed-shared-actor__name span[aria-hidden="true"]',
-      '.update-components-actor__name span[aria-hidden="true"]',
-      '.feed-shared-actor__name'
-    ]
+    // Layer 3: Structural (no class/attribute dependency)
+    structural: null // handled by detectPostsStructurally()
   },
 
+  // ── Post text selectors ──
+  TEXT_SELECTORS: [
+    '.feed-shared-text span[dir="ltr"]',
+    '.feed-shared-update-v2__description span[dir="ltr"]',
+    '.update-components-text span[dir="ltr"]',
+    '.break-words span[dir="ltr"]',
+    '.feed-shared-text',
+    '.update-components-text .break-words',
+    '.feed-shared-inline-show-more-text span[dir="ltr"]',
+    '.feed-shared-update-v2__commentary span[dir="ltr"]',
+    '.feed-shared-update-v2__commentary .break-words'
+  ],
+
+  // ── Post author selectors ──
+  AUTHOR_SELECTORS: [
+    '.feed-shared-actor__name span[aria-hidden="true"]',
+    '.update-components-actor__name span[aria-hidden="true"]',
+    '.feed-shared-actor__name'
+  ],
+
+  // ── Internal state ──
+  _lastStrategy: null,
+  _feedRoot: null,
+
+  // ══════════════════════════════════════════════════════════
+  //  Feed wrapper detection
+  // ══════════════════════════════════════════════════════════
+
+  /**
+   * Find the feed wrapper element. Caches the result until it's detached.
+   */
+  getFeedRoot() {
+    // Return cached root if still in DOM
+    if (this._feedRoot && document.contains(this._feedRoot)) {
+      return this._feedRoot;
+    }
+    for (const sel of this.FEED_WRAPPERS) {
+      const el = document.querySelector(sel);
+      if (el) {
+        this._feedRoot = el;
+        console.log('[PostToast Extractor] Feed root found via:', sel);
+        return el;
+      }
+    }
+    // Ultimate fallback
+    this._feedRoot = document.body;
+    console.log('[PostToast Extractor] Feed root fallback: document.body');
+    return document.body;
+  },
+
+  // ══════════════════════════════════════════════════════════
+  //  Layer 3: Structural detection
+  // ══════════════════════════════════════════════════════════
+
+  /**
+   * Walk the DOM looking for repeated sibling containers that look like posts.
+   * A post-like container has: substantial text content AND engagement-like buttons.
+   */
+  detectPostsStructurally(root) {
+    const candidates = [];
+
+    // Look for <main> or largest scrollable area
+    const searchRoot = root || this.getFeedRoot();
+
+    // Strategy: find direct children of list-like containers (ol, ul, div with many children)
+    const listContainers = searchRoot.querySelectorAll('ol, ul, div');
+
+    for (const container of listContainers) {
+      const children = Array.from(container.children);
+      if (children.length < 3) continue; // need at least 3 siblings to look like a feed
+
+      // Check if children look like post containers
+      let postLikeCount = 0;
+      const postLike = [];
+
+      for (const child of children) {
+        if (this._looksLikePost(child)) {
+          postLikeCount++;
+          postLike.push(child);
+        }
+      }
+
+      // If 3+ siblings look like posts, we found the feed
+      if (postLikeCount >= 3) {
+        candidates.push(...postLike);
+        break; // use the first matching container
+      }
+    }
+
+    return candidates;
+  },
+
+  /**
+   * Heuristic: does this element look like a LinkedIn post?
+   * Must have: text > 50 chars AND some interactive element (button/link with engagement text).
+   */
+  _looksLikePost(el) {
+    // Skip tiny or hidden elements
+    if (!el || el.offsetHeight < 50) return false;
+
+    const text = (el.innerText || '').trim();
+    if (text.length < 50) return false;
+
+    // Must have at least one button or interactive element (like, comment, share, repost)
+    const buttons = el.querySelectorAll('button, [role="button"]');
+    if (buttons.length < 2) return false;
+
+    // Check for engagement-like button text
+    const buttonTexts = Array.from(buttons).map(b => (b.innerText || b.getAttribute('aria-label') || '').toLowerCase());
+    const engagementWords = ['like', 'comment', 'share', 'repost', 'send', 'react', 'love', 'celebrate', 'support', 'insightful', 'funny'];
+    const hasEngagement = buttonTexts.some(t => engagementWords.some(w => t.includes(w)));
+
+    return hasEngagement;
+  },
+
+  // ══════════════════════════════════════════════════════════
+  //  Core API
+  // ══════════════════════════════════════════════════════════
+
+  /**
+   * Get all posts in the feed using the layered strategy.
+   * Returns { posts: Element[], strategy: string }
+   */
+  getAllPostsWithStrategy() {
+    const root = this.getFeedRoot();
+
+    // Layer 1: URN selectors
+    for (const sel of this.LAYERS.urn) {
+      const posts = root.querySelectorAll(sel);
+      if (posts.length > 0) {
+        this._lastStrategy = 'urn:' + sel;
+        return { posts: Array.from(posts), strategy: this._lastStrategy };
+      }
+    }
+
+    // Layer 2: CSS class selectors
+    for (const sel of this.LAYERS.css) {
+      const posts = root.querySelectorAll(sel);
+      if (posts.length > 0) {
+        this._lastStrategy = 'css:' + sel;
+        return { posts: Array.from(posts), strategy: this._lastStrategy };
+      }
+    }
+
+    // Layer 3: Structural detection
+    const structuralPosts = this.detectPostsStructurally(root);
+    if (structuralPosts.length > 0) {
+      this._lastStrategy = 'structural';
+      return { posts: structuralPosts, strategy: this._lastStrategy };
+    }
+
+    this._lastStrategy = 'none';
+    return { posts: [], strategy: 'none' };
+  },
+
+  /**
+   * Get all posts (backward-compatible — returns just the array).
+   */
+  getAllPosts() {
+    const result = this.getAllPostsWithStrategy();
+    if (result.posts.length > 0 && this._lastStrategy !== this._loggedStrategy) {
+      console.log(`[PostToast Extractor] Found ${result.posts.length} posts via ${result.strategy}`);
+      this._loggedStrategy = this._lastStrategy;
+    }
+    return result.posts;
+  },
+
+  /**
+   * Find the post container for a given element (e.g., from a click event).
+   */
   findPostContainer(element) {
-    for (const selector of this.SELECTORS.postContainer) {
-      const container = element.closest(selector);
+    // Try URN selectors first (most reliable for .closest())
+    for (const sel of this.LAYERS.urn) {
+      const container = element.closest(sel);
+      if (container) return container;
+    }
+    // Then CSS selectors
+    for (const sel of this.LAYERS.css) {
+      const container = element.closest(sel);
       if (container) return container;
     }
     return null;
   },
 
-  getAllPosts() {
-    for (const selector of this.SELECTORS.postContainer) {
-      const posts = document.querySelectorAll(selector);
-      if (posts.length > 0) return Array.from(posts);
-    }
-    return [];
-  },
-
+  /**
+   * Extract post text from a post element.
+   */
   extractText(postElement) {
-    for (const selector of this.SELECTORS.postText) {
+    for (const selector of this.TEXT_SELECTORS) {
       const elements = postElement.querySelectorAll(selector);
       if (elements.length > 0) {
         return Array.from(elements)
@@ -64,19 +245,39 @@ const PostToastExtractor = {
     return allText.length > 50 ? allText : '';
   },
 
+  /**
+   * Extract author name from a post element.
+   */
   extractAuthor(postElement) {
-    for (const selector of this.SELECTORS.postAuthor) {
+    for (const selector of this.AUTHOR_SELECTORS) {
       const el = postElement.querySelector(selector);
       if (el) return (el.innerText || el.textContent || '').trim();
     }
     return 'Unknown';
   },
 
+  /**
+   * Get the URN identifier for a post element.
+   */
   getPostUrn(postElement) {
+    // Check data-urn first
     const urn = postElement.getAttribute('data-urn');
     if (urn) return urn;
-    // Try to find URN in child elements
+    // Check data-id
+    const dataId = postElement.getAttribute('data-id');
+    if (dataId && dataId.startsWith('urn:li:')) return dataId;
+    // Search children
     const urnEl = postElement.querySelector('[data-urn]');
-    return urnEl ? urnEl.getAttribute('data-urn') : null;
+    if (urnEl) return urnEl.getAttribute('data-urn');
+    const idEl = postElement.querySelector('[data-id^="urn:li:"]');
+    if (idEl) return idEl.getAttribute('data-id');
+    return null;
+  },
+
+  /**
+   * Return the last successful selector strategy (for diagnostics).
+   */
+  getLastStrategy() {
+    return this._lastStrategy;
   }
 };
