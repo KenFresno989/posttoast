@@ -1394,6 +1394,10 @@ const PostToastExtractor = {
       '.update-components-update',
       'article[data-id="main-feed-card"]'
     ],
+    // Layer 2.5: Data-attribute selectors (LinkedIn tracking attrs, hashed-class DOM variant)
+    dataAttr: [
+      'div[data-view-tracking-scope][data-display-contents="true"]'
+    ],
     // Layer 3: Structural (no class/attribute dependency)
     structural: null // handled by detectPostsStructurally()
   },
@@ -1542,6 +1546,20 @@ const PostToastExtractor = {
       }
     }
 
+    // Layer 2.5: Data-attribute selectors (hashed-class DOM variant)
+    for (const sel of this.LAYERS.dataAttr) {
+      const posts = root.querySelectorAll(sel);
+      // Filter to only post-like elements (skip composer, sort bar, dividers)
+      const realPosts = Array.from(posts).filter(el => {
+        const text = (el.innerText || el.textContent || '').trim();
+        return text.length > 100;
+      });
+      if (realPosts.length > 0) {
+        this._lastStrategy = 'dataAttr:' + sel;
+        return { posts: realPosts, strategy: this._lastStrategy };
+      }
+    }
+
     // Layer 3: Structural detection
     const structuralPosts = this.detectPostsStructurally(root);
     if (structuralPosts.length > 0) {
@@ -1579,6 +1597,11 @@ const PostToastExtractor = {
       const container = element.closest(sel);
       if (container) return container;
     }
+    // Then data-attribute selectors
+    for (const sel of this.LAYERS.dataAttr) {
+      const container = element.closest(sel);
+      if (container) return container;
+    }
     return null;
   },
 
@@ -1586,6 +1609,7 @@ const PostToastExtractor = {
    * Extract post text from a post element.
    */
   extractText(postElement) {
+    // Try specific selectors first
     for (const selector of this.TEXT_SELECTORS) {
       const elements = postElement.querySelectorAll(selector);
       if (elements.length > 0) {
@@ -1595,7 +1619,24 @@ const PostToastExtractor = {
           .trim();
       }
     }
-    // Fallback: try to get any substantial text content
+    // Hashed-class fallback: find the largest text block that isn't
+    // button/engagement text. Walk child divs, pick the one with most text.
+    const candidates = postElement.querySelectorAll('div, span, p');
+    let bestText = '';
+    for (const el of candidates) {
+      // Skip if it's a button or inside a button
+      if (el.closest('button, [role="button"]')) continue;
+      const text = (el.innerText || el.textContent || '').trim();
+      // Want the longest text block that's clearly post content
+      if (text.length > bestText.length && text.length > 50) {
+        // Make sure this isn't the entire post container (too much noise)
+        if (text.length < (postElement.innerText || '').length * 0.9) {
+          bestText = text;
+        }
+      }
+    }
+    if (bestText.length > 50) return bestText;
+    // Ultimate fallback: full innerText
     const allText = postElement.innerText || '';
     return allText.length > 50 ? allText : '';
   },

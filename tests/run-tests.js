@@ -110,6 +110,12 @@ assert(PostToastExtractor.LAYERS.css.includes('.occludable-update'), 'Has occlud
 assert(PostToastExtractor.LAYERS.css.includes('.update-components-update'), 'Has update-components-update');
 assert(PostToastExtractor.LAYERS.css.some(s => s.includes('main-feed-card')), 'Has main-feed-card article');
 
+section('Extractor — data-attribute layer');
+assert(Array.isArray(PostToastExtractor.LAYERS.dataAttr), 'Has dataAttr layer array');
+assert(PostToastExtractor.LAYERS.dataAttr.length >= 1, 'At least 1 data-attr selector');
+assert(PostToastExtractor.LAYERS.dataAttr[0].includes('data-view-tracking-scope'), 'Has tracking scope selector');
+assert(PostToastExtractor.LAYERS.dataAttr[0].includes('data-display-contents'), 'Has display-contents selector');
+
 section('Extractor — structural fallback');
 assert(typeof PostToastExtractor.detectPostsStructurally === 'function', 'Has structural detection method');
 assert(typeof PostToastExtractor._looksLikePost === 'function', 'Has _looksLikePost heuristic');
