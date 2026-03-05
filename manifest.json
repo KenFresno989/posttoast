@@ -1,16 +1,26 @@
 {
   "manifest_version": 3,
-  "name": "PostToast — LinkedIn Cringe Detector",
+  "name": "PostToast \u2014 LinkedIn Cringe Detector",
   "homepage_url": "https://posttoast.app",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Scores every LinkedIn post 0-10 on a cringe scale. See exactly why that post made you cringe.",
-  "permissions": ["storage"],
-  "host_permissions": ["https://www.linkedin.com/*"],
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://www.linkedin.com/*"
+  ],
   "content_scripts": [
     {
-      "matches": ["https://www.linkedin.com/*"],
-      "js": ["src/posttoast-bundle.js"],
-      "css": ["src/styles.css"],
+      "matches": [
+        "https://www.linkedin.com/*"
+      ],
+      "js": [
+        "src/posttoast-bundle.js"
+      ],
+      "css": [
+        "src/styles.css"
+      ],
       "run_at": "document_end"
     }
   ],
