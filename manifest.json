@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "PostToast \u2014 LinkedIn Cringe Detector",
   "homepage_url": "https://posttoast.app",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Scores every LinkedIn post 0-10 on a cringe scale. See exactly why that post made you cringe.",
   "permissions": [
     "storage"

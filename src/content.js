@@ -16,7 +16,12 @@
   const requiredModules = ['PostToastExtractor', 'PostToastObserver', 'PostToastBadge'];
   
   function checkDependencies() {
-    const missing = requiredModules.filter(name => typeof window[name] === 'undefined');
+    const refs = {
+      PostToastExtractor: typeof PostToastExtractor !== 'undefined',
+      PostToastObserver: typeof PostToastObserver !== 'undefined',
+      PostToastBadge: typeof PostToastBadge !== 'undefined'
+    };
+    const missing = Object.keys(refs).filter(k => !refs[k]);
     if (missing.length > 0) {
       console.warn('[PostToast] Missing dependencies:', missing);
       return false;
