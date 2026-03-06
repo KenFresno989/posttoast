@@ -1910,9 +1910,16 @@ const PostToastObserver = {
   mutationObserver: null,
   intersectionObserver: null,
   scoreCache: new Map(),
+  _initialized: false,
 
   init() {
     try {
+      // Guard against double-initialization
+      if (this._initialized) {
+        console.log('[PostToast] Observer already initialized, skipping');
+        return;
+      }
+      this._initialized = true;
       console.log('[PostToast] Initializing observer');
       
       // Set up IntersectionObserver FIRST
@@ -1998,6 +2005,7 @@ const PostToastObserver = {
       if (this.mutationObserver) this.mutationObserver.disconnect();
       if (this.intersectionObserver) this.intersectionObserver.disconnect();
       clearTimeout(this._debounceTimer);
+      this._initialized = false;
       console.log('[PostToast] Observer destroyed');
     } catch (err) {
       console.error('[PostToast] Error destroying observer:', err);
@@ -2084,7 +2092,7 @@ const PostToastObserver = {
       const checkFeed = setInterval(() => {
         try {
           const posts = PostToastExtractor.getAllPosts();
-          if (posts.length > 0 || document.querySelector('main')) {
+          if (posts.length > 0) {
             console.log('[PostToast] Feed found, initializing observer. Posts found:', posts.length);
             clearInterval(checkFeed);
             PostToastObserver.init();
@@ -2094,10 +2102,21 @@ const PostToastObserver = {
         }
       }, 500);
 
-      // Safety: stop checking after 30 seconds
+      // Safety: stop checking after 30 seconds, try structural fallback
       setTimeout(() => {
         clearInterval(checkFeed);
-        console.log('[PostToast] Feed check timeout reached');
+        // Last-ditch: try structural detection on document.body
+        try {
+          const structuralPosts = PostToastExtractor.detectPostsStructurally(document.body);
+          if (structuralPosts.length > 0) {
+            console.log('[PostToast] Late structural detection found', structuralPosts.length, 'posts. Starting observer.');
+            PostToastObserver.init();
+            return;
+          }
+        } catch (err) {
+          console.error('[PostToast] Structural fallback error:', err);
+        }
+        console.log('[PostToast] Feed check timeout reached — no posts found on this page');
       }, 30000);
     } catch (err) {
       console.error('[PostToast] Fatal error in startPostToast:', err);

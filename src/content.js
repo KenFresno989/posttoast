@@ -78,7 +78,7 @@
       const checkFeed = setInterval(() => {
         try {
           const posts = PostToastExtractor.getAllPosts();
-          if (posts.length > 0 || document.querySelector('main')) {
+          if (posts.length > 0) {
             console.log('[PostToast] Feed found, initializing observer. Posts found:', posts.length);
             clearInterval(checkFeed);
             PostToastObserver.init();
@@ -88,10 +88,21 @@
         }
       }, 500);
 
-      // Safety: stop checking after 30 seconds
+      // Safety: stop checking after 30 seconds, try structural fallback
       setTimeout(() => {
         clearInterval(checkFeed);
-        console.log('[PostToast] Feed check timeout reached');
+        // Last-ditch: try structural detection on document.body
+        try {
+          const structuralPosts = PostToastExtractor.detectPostsStructurally(document.body);
+          if (structuralPosts.length > 0) {
+            console.log('[PostToast] Late structural detection found', structuralPosts.length, 'posts. Starting observer.');
+            PostToastObserver.init();
+            return;
+          }
+        } catch (err) {
+          console.error('[PostToast] Structural fallback error:', err);
+        }
+        console.log('[PostToast] Feed check timeout reached — no posts found on this page');
       }, 30000);
     } catch (err) {
       console.error('[PostToast] Fatal error in startPostToast:', err);

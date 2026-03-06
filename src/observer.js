@@ -9,9 +9,16 @@ const PostToastObserver = {
   mutationObserver: null,
   intersectionObserver: null,
   scoreCache: new Map(),
+  _initialized: false,
 
   init() {
     try {
+      // Guard against double-initialization
+      if (this._initialized) {
+        console.log('[PostToast] Observer already initialized, skipping');
+        return;
+      }
+      this._initialized = true;
       console.log('[PostToast] Initializing observer');
       
       // Set up IntersectionObserver FIRST
@@ -97,6 +104,7 @@ const PostToastObserver = {
       if (this.mutationObserver) this.mutationObserver.disconnect();
       if (this.intersectionObserver) this.intersectionObserver.disconnect();
       clearTimeout(this._debounceTimer);
+      this._initialized = false;
       console.log('[PostToast] Observer destroyed');
     } catch (err) {
       console.error('[PostToast] Error destroying observer:', err);
