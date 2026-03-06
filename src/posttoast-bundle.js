@@ -1767,8 +1767,16 @@ const PostToastBadge = {
   scorePost(postElement) {
     if (this.isScored(postElement)) return;
 
+    // Skip non-post elements (sort bar, composer, nav, ads)
     const text = PostToastExtractor.extractText(postElement);
-    if (!text || text.length < 20) return; // Skip empty/tiny posts
+    if (!text || text.length < 50) return; // Skip empty/tiny elements
+
+    // Must have engagement buttons to be a real post
+    const buttons = postElement.querySelectorAll('button, [role="button"]');
+    const buttonTexts = Array.from(buttons).map(b => (b.innerText || b.getAttribute('aria-label') || '').toLowerCase());
+    const engagementWords = ['like', 'comment', 'share', 'repost', 'send', 'react', 'love', 'celebrate', 'support', 'insightful', 'funny'];
+    const hasEngagement = buttonTexts.some(t => engagementWords.some(w => t.includes(w)));
+    if (!hasEngagement) return; // Not a real post
 
     const result = PostToastScorer.score(text);
     this.inject(postElement, result);
