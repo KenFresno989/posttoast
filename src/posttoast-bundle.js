@@ -2090,18 +2090,35 @@ const PostToastObserver = {
     init();
   }
 
+  function dumpDiagnostics(label) {
+    console.log(`[PostToast DIAG] === ${label} ===`);
+    console.log('[PostToast DIAG] Feed root:', PostToastExtractor._feedRoot?.tagName, PostToastExtractor._feedRoot?.className?.slice(0, 60));
+    console.log('[PostToast DIAG] Root in DOM:', PostToastExtractor._feedRoot ? document.contains(PostToastExtractor._feedRoot) : 'null');
+    console.log('[PostToast DIAG] Strategy:', PostToastExtractor.getLastStrategy());
+    console.log('[PostToast DIAG] Observer._initialized:', PostToastObserver._initialized);
+    const urn = document.querySelectorAll('[data-urn^="urn:li:activity"]').length;
+    const css = document.querySelectorAll('.feed-shared-update-v2').length;
+    const scaffold = document.querySelectorAll('.scaffold-finite-scroll__content').length;
+    console.log(`[PostToast DIAG] DOM check: URN=${urn} CSS=${css} scaffold=${scaffold}`);
+  }
+
   function startPostToast() {
     console.log('[PostToast] Starting PostToast observer...');
     
     try {
+      let attempts = 0;
       // Wait for feed to load
       const checkFeed = setInterval(() => {
+        attempts++;
         try {
           const posts = PostToastExtractor.getAllPosts();
           if (posts.length > 0) {
             console.log('[PostToast] Feed found, initializing observer. Posts found:', posts.length);
             clearInterval(checkFeed);
             PostToastObserver.init();
+          } else if (attempts % 10 === 0) {
+            // Log diagnostics every 5 seconds while waiting
+            dumpDiagnostics(`Still waiting (attempt ${attempts})`);
           }
         } catch (err) {
           console.error('[PostToast] Error checking feed:', err);
@@ -2111,6 +2128,7 @@ const PostToastObserver = {
       // Safety: stop checking after 30 seconds, try structural fallback
       setTimeout(() => {
         clearInterval(checkFeed);
+        dumpDiagnostics('Timeout reached');
         // Last-ditch: try structural detection on document.body
         try {
           const structuralPosts = PostToastExtractor.detectPostsStructurally(document.body);
