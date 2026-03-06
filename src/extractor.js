@@ -19,8 +19,10 @@ const PostToastExtractor = {
     '.scaffold-finite-scroll--infinite',
     '.scaffold-finite-scroll__content',
     'ol.feed-container',
-    '.core-rail',
-    'main'
+    '.core-rail'
+    // NOTE: 'main' deliberately excluded — LinkedIn's posts aren't always
+    // descendants of <main>, so it scopes the search to the wrong subtree.
+    // Falls through to document.body instead (see getFeedRoot).
   ],
 
   // ── Post container selectors by layer ──
@@ -80,20 +82,24 @@ const PostToastExtractor = {
    */
   getFeedRoot() {
     // Return cached root if still in DOM
-    if (this._feedRoot && document.contains(this._feedRoot)) {
+    if (this._feedRoot && this._feedRoot !== document.body && document.contains(this._feedRoot)) {
       return this._feedRoot;
     }
+
+    // Cache invalidated — try specific wrappers
     for (const sel of this.FEED_WRAPPERS) {
       const el = document.querySelector(sel);
       if (el) {
         this._feedRoot = el;
+        this._feedRootSelector = sel;
         console.log('[PostToast Extractor] Feed root found via:', sel);
         return el;
       }
     }
-    // Ultimate fallback
-    this._feedRoot = document.body;
-    console.log('[PostToast Extractor] Feed root fallback: document.body');
+
+    // No specific wrapper found — use document.body (unscoped search).
+    // Don't cache body so we keep retrying specific wrappers next call.
+    console.log('[PostToast Extractor] No feed wrapper found, using document.body (unscoped)');
     return document.body;
   },
 
