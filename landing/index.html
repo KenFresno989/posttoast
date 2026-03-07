@@ -22,17 +22,17 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --bg: #1A1410;
-      --surface: #241D16;
-      --surface-2: #2E2620;
-      --border: #3D3428;
-      --text: #F2E8DC;
-      --text-muted: #9A8E80;
-      --toast: #A855F7;
-      --toast-dim: rgba(168, 85, 247, 0.15);
-      --green: #22c55e;
-      --yellow: #eab308;
-      --red: #ef4444;
+      --bg: #FAF7F2;
+      --surface: #FFFFFF;
+      --surface-2: #F0EBE3;
+      --border: #E0D8CC;
+      --text: #2A2118;
+      --text-muted: #7A7060;
+      --accent: #C05A2C;
+      --accent-dim: rgba(192, 90, 44, 0.1);
+      --green: #16803C;
+      --yellow: #A16B07;
+      --red: #C53030;
     }
 
     body {
@@ -49,7 +49,7 @@
       top: 0;
       width: 100%;
       padding: 16px 24px;
-      background: rgba(26, 20, 16, 0.9);
+      background: rgba(250, 247, 242, 0.92);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
       z-index: 100;
@@ -62,13 +62,14 @@
       font-size: 1.25rem;
       font-weight: 800;
       letter-spacing: -0.02em;
+      color: var(--text);
     }
 
-    .logo span { color: var(--toast); }
+    .logo span { color: var(--accent); }
 
     .nav-cta {
-      background: var(--toast);
-      color: #1A1410;
+      background: var(--accent);
+      color: #fff;
       padding: 8px 20px;
       border-radius: 8px;
       text-decoration: none;
@@ -79,7 +80,7 @@
 
     .nav-cta:hover {
       transform: translateY(-1px);
-      box-shadow: 0 4px 20px rgba(168, 85, 247, 0.3);
+      box-shadow: 0 4px 20px rgba(192, 90, 44, 0.25);
     }
 
     /* Hero */
@@ -92,8 +93,8 @@
 
     .hero-badge {
       display: inline-block;
-      background: var(--toast-dim);
-      color: var(--toast);
+      background: var(--accent-dim);
+      color: var(--accent);
       padding: 6px 16px;
       border-radius: 20px;
       font-size: 0.85rem;
@@ -107,9 +108,10 @@
       letter-spacing: -0.03em;
       line-height: 1.1;
       margin-bottom: 20px;
+      color: var(--text);
     }
 
-    h1 .highlight { color: var(--toast); }
+    h1 .highlight { color: var(--accent); }
 
     .hero p {
       font-size: 1.2rem;
@@ -122,8 +124,8 @@
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      background: var(--toast);
-      color: #1A1410;
+      background: var(--accent);
+      color: #fff;
       padding: 14px 32px;
       border-radius: 12px;
       text-decoration: none;
@@ -134,7 +136,7 @@
 
     .hero-cta:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(168, 85, 247, 0.3);
+      box-shadow: 0 8px 30px rgba(192, 90, 44, 0.25);
     }
 
     .hero-sub {
@@ -156,6 +158,7 @@
       border-radius: 12px;
       padding: 24px;
       position: relative;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
     }
 
     .demo-header {
@@ -183,7 +186,7 @@
       font-size: 0.95rem;
       line-height: 1.7;
       margin-bottom: 20px;
-      color: #C4B8A8;
+      color: var(--text-muted);
     }
 
     .demo-text p { margin-bottom: 12px; }
@@ -207,9 +210,9 @@
     .badge:hover { transform: scale(1.05); }
 
     .badge.high {
-      background: rgba(239, 68, 68, 0.15);
+      background: rgba(197, 48, 48, 0.1);
       color: var(--red);
-      border: 1px solid rgba(239, 68, 68, 0.3);
+      border: 1px solid rgba(197, 48, 48, 0.25);
     }
 
     /* Breakdown */
@@ -235,12 +238,12 @@
       justify-content: space-between;
       align-items: center;
       padding: 8px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
       font-size: 0.9rem;
     }
 
     .signal:last-child { border-bottom: none; }
-    .signal-name { color: #C4B8A8; }
+    .signal-name { color: var(--text-muted); }
 
     .signal-score {
       font-weight: 700;
@@ -298,9 +301,7 @@
       gap: 0;
     }
 
-    .scale-row {
-      display: contents;
-    }
+    .scale-row { display: contents; }
 
     .scale-row > * {
       padding: 14px 16px;
@@ -342,20 +343,9 @@
       padding: 24px;
     }
 
-    .how-icon {
-      font-size: 2.5rem;
-      margin-bottom: 16px;
-    }
-
-    .how-card h3 {
-      font-size: 1.1rem;
-      margin-bottom: 8px;
-    }
-
-    .how-card p {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
+    .how-icon { font-size: 2.5rem; margin-bottom: 16px; }
+    .how-card h3 { font-size: 1.1rem; margin-bottom: 8px; }
+    .how-card p { color: var(--text-muted); font-size: 0.9rem; }
 
     /* VS Section */
     .vs-section {
@@ -378,15 +368,8 @@
       padding: 28px;
     }
 
-    .vs-card h3 {
-      font-size: 1.1rem;
-      margin-bottom: 16px;
-    }
-
-    .vs-card ul {
-      list-style: none;
-      padding: 0;
-    }
+    .vs-card h3 { font-size: 1.1rem; margin-bottom: 16px; }
+    .vs-card ul { list-style: none; padding: 0; }
 
     .vs-card li {
       padding: 6px 0;
@@ -394,16 +377,12 @@
       color: var(--text-muted);
     }
 
-    .vs-card li::before {
-      margin-right: 8px;
-      font-weight: bold;
-    }
-
+    .vs-card li::before { margin-right: 8px; font-weight: bold; }
     .vs-card.them li::before { content: "✗"; color: var(--red); }
     .vs-card.us li::before { content: "✓"; color: var(--green); }
     .vs-card.us {
-      border-color: rgba(168, 85, 247, 0.3);
-      background: rgba(168, 85, 247, 0.03);
+      border-color: rgba(192, 90, 44, 0.3);
+      background: rgba(192, 90, 44, 0.03);
     }
 
     /* CTA */
@@ -435,18 +414,15 @@
       font-size: 0.85rem;
     }
 
-    footer a { color: var(--toast); text-decoration: none; }
+    footer a { color: var(--accent); text-decoration: none; }
 
     .bmac-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
       color: var(--text-muted);
       text-decoration: none;
       transition: color 0.2s;
     }
 
-    .bmac-link:hover { color: var(--toast); }
+    .bmac-link:hover { color: var(--accent); }
 
     /* Tablet */
     @media (max-width: 768px) {
@@ -511,7 +487,6 @@
     <a href="#get" class="nav-cta">Get PostToast Free</a>
   </nav>
 
-  <!-- Hero -->
   <section class="hero">
     <div class="hero-badge">Free Chrome Extension</div>
     <h1>LinkedIn posts scored.<br><span class="highlight">Bullshit exposed.</span></h1>
@@ -520,7 +495,6 @@
     <p class="hero-sub">Free Chrome/Edge extension. No account needed. No data collected.</p>
   </section>
 
-  <!-- Demo Post -->
   <section class="demo-section">
     <div class="demo-post">
       <div class="badge high" onclick="this.closest('.demo-post').querySelector('.breakdown').style.display = this.closest('.demo-post').querySelector('.breakdown').style.display === 'none' ? 'block' : 'none'">
@@ -547,38 +521,14 @@
       </div>
       <div class="breakdown">
         <div class="breakdown-title">PostToast Breakdown</div>
-        <div class="signal">
-          <span class="signal-name">🎭 Humble Brag — "SO humbled to announce"</span>
-          <span class="signal-score">+1.5</span>
-        </div>
-        <div class="signal">
-          <span class="signal-name">🎪 Thought Leader Cosplay — "nobody tells you"</span>
-          <span class="signal-score">+1.25</span>
-        </div>
-        <div class="signal">
-          <span class="signal-name">📖 Fabricated Parable — rags-to-riches arc</span>
-          <span class="signal-score">+2.0</span>
-        </div>
-        <div class="signal">
-          <span class="signal-name">📝 Broetry — 10 single-sentence paragraphs</span>
-          <span class="signal-score med">+1.0</span>
-        </div>
-        <div class="signal">
-          <span class="signal-name">🎣 Engagement Bait — "Agree? Drop a 🔥 below 👇"</span>
-          <span class="signal-score">+1.0</span>
-        </div>
-        <div class="signal">
-          <span class="signal-name">😬 Emoji Abuse — 4 emojis in 10 lines</span>
-          <span class="signal-score med">+0.5</span>
-        </div>
-        <div class="signal">
-          <span class="signal-name">#️⃣ Hashtag Spam — 5 hashtags</span>
-          <span class="signal-score low">+0.25</span>
-        </div>
-        <div class="signal">
-          <span class="signal-name">💼 Corporate Jargon — "disrupting the synergy space"</span>
-          <span class="signal-score med">+0.75</span>
-        </div>
+        <div class="signal"><span class="signal-name">🎭 Humble Brag — "SO humbled to announce"</span><span class="signal-score">+1.5</span></div>
+        <div class="signal"><span class="signal-name">🎪 Thought Leader Cosplay — "nobody tells you"</span><span class="signal-score">+1.25</span></div>
+        <div class="signal"><span class="signal-name">📖 Fabricated Parable — rags-to-riches arc</span><span class="signal-score">+2.0</span></div>
+        <div class="signal"><span class="signal-name">📝 Broetry — 10 single-sentence paragraphs</span><span class="signal-score med">+1.0</span></div>
+        <div class="signal"><span class="signal-name">🎣 Engagement Bait — "Agree? Drop a 🔥 below 👇"</span><span class="signal-score">+1.0</span></div>
+        <div class="signal"><span class="signal-name">😬 Emoji Abuse — 4 emojis in 10 lines</span><span class="signal-score med">+0.5</span></div>
+        <div class="signal"><span class="signal-name">#️⃣ Hashtag Spam — 5 hashtags</span><span class="signal-score low">+0.25</span></div>
+        <div class="signal"><span class="signal-name">💼 Corporate Jargon — "disrupting the synergy space"</span><span class="signal-score med">+0.75</span></div>
         <div class="total-row">
           <span>Total <span class="total-label-sub">— Peak LinkedIn</span></span>
           <span class="total-score">8.25 / 10</span>
@@ -587,99 +537,34 @@
     </div>
   </section>
 
-  <!-- The Scale -->
   <section class="scale-section">
     <h2 class="section-title">The Scale</h2>
     <p class="section-sub">Every number means something. Quarter points add nuance.</p>
     <div class="scale-grid">
-      <div class="scale-row">
-        <div class="scale-num s-green">0</div>
-        <div class="scale-label">Genuine Human</div>
-        <div class="scale-desc">Authentic, useful, no performance</div>
-      </div>
-      <div class="scale-row">
-        <div class="scale-num s-green">1</div>
-        <div class="scale-label">Mostly Clean</div>
-        <div class="scale-desc">Minor corporate-speak but real content</div>
-      </div>
-      <div class="scale-row">
-        <div class="scale-num s-green">2</div>
-        <div class="scale-label">Slight Whiff</div>
-        <div class="scale-desc">A touch of self-promotion, forgivable</div>
-      </div>
-      <div class="scale-row">
-        <div class="scale-num s-yellow">3</div>
-        <div class="scale-label">Getting Warm</div>
-        <div class="scale-desc">Noticeable humble brag or engagement bait</div>
-      </div>
-      <div class="scale-row">
-        <div class="scale-num s-yellow">4</div>
-        <div class="scale-label">Corporate Smell</div>
-        <div class="scale-desc">Jargon-heavy, clearly performing for the feed</div>
-      </div>
-      <div class="scale-row">
-        <div class="scale-num s-yellow">5</div>
-        <div class="scale-label">Half Bullshit</div>
-        <div class="scale-desc">Equal parts substance and theater</div>
-      </div>
-      <div class="scale-row">
-        <div class="scale-num s-red">6</div>
-        <div class="scale-label">Mostly Theater</div>
-        <div class="scale-desc">More performance than content</div>
-      </div>
-      <div class="scale-row">
-        <div class="scale-num s-red">7</div>
-        <div class="scale-label">Full Cringe</div>
-        <div class="scale-desc">Textbook LinkedIn cringe, multiple signals stacking</div>
-      </div>
-      <div class="scale-row">
-        <div class="scale-num s-red">8</div>
-        <div class="scale-label">Peak LinkedIn</div>
-        <div class="scale-desc">This is what people screenshot for Reddit</div>
-      </div>
-      <div class="scale-row">
-        <div class="scale-num s-red">9</div>
-        <div class="scale-label">Weapons-Grade</div>
-        <div class="scale-desc">Fabricated parables, toxic positivity overload</div>
-      </div>
-      <div class="scale-row">
-        <div class="scale-num s-red">10</div>
-        <div class="scale-label">Pure Uncut BS</div>
-        <div class="scale-desc">The platonic ideal of LinkedIn garbage</div>
-      </div>
+      <div class="scale-row"><div class="scale-num s-green">0</div><div class="scale-label">Genuine Human</div><div class="scale-desc">Authentic, useful, no performance</div></div>
+      <div class="scale-row"><div class="scale-num s-green">1</div><div class="scale-label">Mostly Clean</div><div class="scale-desc">Minor corporate-speak but real content</div></div>
+      <div class="scale-row"><div class="scale-num s-green">2</div><div class="scale-label">Slight Whiff</div><div class="scale-desc">A touch of self-promotion, forgivable</div></div>
+      <div class="scale-row"><div class="scale-num s-yellow">3</div><div class="scale-label">Getting Warm</div><div class="scale-desc">Noticeable humble brag or engagement bait</div></div>
+      <div class="scale-row"><div class="scale-num s-yellow">4</div><div class="scale-label">Corporate Smell</div><div class="scale-desc">Jargon-heavy, clearly performing for the feed</div></div>
+      <div class="scale-row"><div class="scale-num s-yellow">5</div><div class="scale-label">Half Bullshit</div><div class="scale-desc">Equal parts substance and theater</div></div>
+      <div class="scale-row"><div class="scale-num s-red">6</div><div class="scale-label">Mostly Theater</div><div class="scale-desc">More performance than content</div></div>
+      <div class="scale-row"><div class="scale-num s-red">7</div><div class="scale-label">Full Cringe</div><div class="scale-desc">Textbook LinkedIn cringe, multiple signals stacking</div></div>
+      <div class="scale-row"><div class="scale-num s-red">8</div><div class="scale-label">Peak LinkedIn</div><div class="scale-desc">This is what people screenshot for Reddit</div></div>
+      <div class="scale-row"><div class="scale-num s-red">9</div><div class="scale-label">Weapons-Grade</div><div class="scale-desc">Fabricated parables, toxic positivity overload</div></div>
+      <div class="scale-row"><div class="scale-num s-red">10</div><div class="scale-label">Pure Uncut BS</div><div class="scale-desc">The platonic ideal of LinkedIn garbage</div></div>
     </div>
   </section>
 
-  <!-- How It Works -->
   <section class="how-section">
     <h2 class="section-title">How It Works</h2>
     <p class="section-sub">Install. Scroll. Laugh.</p>
     <div class="how-grid">
-      <div class="how-card">
-        <div class="how-icon">📥</div>
-        <div>
-          <h3>Install the Extension</h3>
-          <p>One click from the Chrome Web Store. No account needed. No setup.</p>
-        </div>
-      </div>
-      <div class="how-card">
-        <div class="how-icon">📊</div>
-        <div>
-          <h3>Every Post Gets Scored</h3>
-          <p>A badge appears on each LinkedIn post with its bullshit score, scored in real-time as you scroll.</p>
-        </div>
-      </div>
-      <div class="how-card">
-        <div class="how-icon">🔍</div>
-        <div>
-          <h3>See the Breakdown</h3>
-          <p>Click any badge. See exactly which signals triggered — humble brag, broetry, engagement bait, all of it.</p>
-        </div>
-      </div>
+      <div class="how-card"><div class="how-icon">📥</div><div><h3>Install the Extension</h3><p>One click from the Chrome Web Store. No account needed. No setup.</p></div></div>
+      <div class="how-card"><div class="how-icon">📊</div><div><h3>Every Post Gets Scored</h3><p>A badge appears on each LinkedIn post with its bullshit score, scored in real-time as you scroll.</p></div></div>
+      <div class="how-card"><div class="how-icon">🔍</div><div><h3>See the Breakdown</h3><p>Click any badge. See exactly which signals triggered — humble brag, broetry, engagement bait, all of it.</p></div></div>
     </div>
   </section>
 
-  <!-- PostToast vs Others -->
   <section class="vs-section">
     <h2 class="section-title">Not Another Black Box</h2>
     <p class="section-sub">Other tools give you a number. We give you the receipt.</p>
@@ -707,35 +592,18 @@
     </div>
   </section>
 
-  <!-- FAQ -->
   <section class="scale-section">
     <h2 class="section-title">FAQ</h2>
     <p class="section-sub">The questions you're already thinking.</p>
     <div style="max-width: 640px; margin: 0 auto; text-align: left;">
-      <div style="margin-bottom: 24px;">
-        <h3 style="font-size: 1rem; margin-bottom: 6px;">Does this send my posts to AI?</h3>
-        <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">No. Everything runs locally in your browser. No APIs, no servers, no cloud. We're not LinkedIn.</p>
-      </div>
-      <div style="margin-bottom: 24px;">
-        <h3 style="font-size: 1rem; margin-bottom: 6px;">Will this get me banned from LinkedIn?</h3>
-        <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">It's a Chrome extension that overlays your browser. LinkedIn can't detect it. It doesn't post, automate, or touch your account.</p>
-      </div>
-      <div style="margin-bottom: 24px;">
-        <h3 style="font-size: 1rem; margin-bottom: 6px;">Does it work on company computers?</h3>
-        <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">If your IT department allows Chrome/Edge extensions, yes. If not, that's between you and IT.</p>
-      </div>
-      <div style="margin-bottom: 24px;">
-        <h3 style="font-size: 1rem; margin-bottom: 6px;">Is this just being mean?</h3>
-        <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">It's pattern detection, not a personal attack. PostToast scores the <em>post</em>, not the person. Think of it as a bullshit breathalyzer.</p>
-      </div>
-      <div>
-        <h3 style="font-size: 1rem; margin-bottom: 6px;">How is this free?</h3>
-        <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">The extension will always be free. We're building a paid "Score My Draft" tool later — paste your post before publishing and see how it lands. The extension stays free forever.</p>
-      </div>
+      <div style="margin-bottom: 24px;"><h3 style="font-size: 1rem; margin-bottom: 6px;">Does this send my posts to AI?</h3><p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">No. Everything runs locally in your browser. No APIs, no servers, no cloud. We're not LinkedIn.</p></div>
+      <div style="margin-bottom: 24px;"><h3 style="font-size: 1rem; margin-bottom: 6px;">Will this get me banned from LinkedIn?</h3><p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">It's a Chrome extension that overlays your browser. LinkedIn can't detect it. It doesn't post, automate, or touch your account.</p></div>
+      <div style="margin-bottom: 24px;"><h3 style="font-size: 1rem; margin-bottom: 6px;">Does it work on company computers?</h3><p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">If your IT department allows Chrome/Edge extensions, yes. If not, that's between you and IT.</p></div>
+      <div style="margin-bottom: 24px;"><h3 style="font-size: 1rem; margin-bottom: 6px;">Is this just being mean?</h3><p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">It's pattern detection, not a personal attack. PostToast scores the <em>post</em>, not the person. Think of it as a bullshit breathalyzer.</p></div>
+      <div><h3 style="font-size: 1rem; margin-bottom: 6px;">How is this free?</h3><p style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">The extension will always be free. We're building a paid "Score My Draft" tool later — paste your post before publishing and see how it lands. The extension stays free forever.</p></div>
     </div>
   </section>
 
-  <!-- CTA -->
   <section class="cta-section" id="get">
     <h2>Ready to see LinkedIn clearly?</h2>
     <p>Free. Local. No account needed. Works on Chrome and Edge.</p>
@@ -747,11 +615,10 @@
     <p>🍞 PostToast — Roasting LinkedIn, one post at a time.</p>
     <p style="margin-top: 8px;">Built by an indie dev who scrolled one too many "humbled to announce" posts.</p>
     <p style="margin-top: 12px;"><a href="https://buymeacoffee.com/leeking" class="bmac-link">☕ Buy me a coffee</a> · <a href='/privacy'>Privacy Policy</a></p>
-    <p style="margin-top: 8px; font-size: 0.75rem; color: #555;">PostToast is a satirical entertainment tool. Not affiliated with, endorsed by, or sponsored by LinkedIn Corporation. LinkedIn is a registered trademark of LinkedIn Corporation.</p>
+    <p style="margin-top: 8px; font-size: 0.75rem; color: #9A8E80;">PostToast is a satirical entertainment tool. Not affiliated with, endorsed by, or sponsored by LinkedIn Corporation. LinkedIn is a registered trademark of LinkedIn Corporation.</p>
   </footer>
 
   <script>
-    // Smooth scroll for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function(e) {
         e.preventDefault();
