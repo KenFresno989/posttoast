@@ -2201,6 +2201,7 @@ const PostToastObserver = {
     
     try {
       let attempts = 0;
+      let feedFound = false;
       // Wait for feed to load
       const checkFeed = setInterval(() => {
         attempts++;
@@ -2208,6 +2209,7 @@ const PostToastObserver = {
           const posts = PostToastExtractor.getAllPosts();
           if (posts.length > 0) {
             console.log('[PostToast] Feed found, initializing observer. Posts found:', posts.length);
+            feedFound = true;
             clearInterval(checkFeed);
             PostToastObserver.init();
           } else if (attempts % 10 === 0) {
@@ -2222,6 +2224,8 @@ const PostToastObserver = {
       // Safety: stop checking after 30 seconds, try structural fallback
       setTimeout(() => {
         clearInterval(checkFeed);
+        // Skip if feed was already found and observer is running
+        if (feedFound) return;
         dumpDiagnostics('Timeout reached');
         // Last-ditch: try structural detection on document.body
         try {
