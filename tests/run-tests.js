@@ -96,7 +96,9 @@ function section(name) {
 section('Extractor — feed wrapper list');
 assert(PostToastExtractor.FEED_WRAPPERS.length >= 5, 'At least 5 feed wrapper selectors');
 assert(PostToastExtractor.FEED_WRAPPERS[0] === 'div[data-testid="mainFeed"]', 'First wrapper is data-testid=mainFeed');
-assert(PostToastExtractor.FEED_WRAPPERS.includes('main'), 'main is a fallback wrapper');
+// 'main' deliberately excluded from FEED_WRAPPERS — LinkedIn posts aren't always
+// descendants of <main>, causing scoped queries to miss posts. Falls to document.body.
+assert(!PostToastExtractor.FEED_WRAPPERS.includes('main'), 'main excluded from wrappers (causes missed posts)');
 
 section('Extractor — URN layer');
 assert(PostToastExtractor.LAYERS.urn.length >= 4, 'At least 4 URN selectors');
@@ -115,6 +117,12 @@ assert(Array.isArray(PostToastExtractor.LAYERS.dataAttr), 'Has dataAttr layer ar
 assert(PostToastExtractor.LAYERS.dataAttr.length >= 1, 'At least 1 data-attr selector');
 assert(PostToastExtractor.LAYERS.dataAttr[0].includes('data-view-tracking-scope'), 'Has tracking scope selector');
 assert(PostToastExtractor.LAYERS.dataAttr[0].includes('data-display-contents'), 'Has display-contents selector');
+
+section('Extractor — reshare filtering');
+assert(Array.isArray(PostToastExtractor.RESHARE_WRAPPERS), 'Has RESHARE_WRAPPERS array');
+assert(PostToastExtractor.RESHARE_WRAPPERS.length >= 3, 'At least 3 reshare wrapper selectors');
+assert(PostToastExtractor.RESHARE_WRAPPERS.some(s => s.includes('reshared')), 'Has reshared selector');
+assert(typeof PostToastExtractor._filterNestedPosts === 'function', 'Has _filterNestedPosts method');
 
 section('Extractor — structural fallback');
 assert(typeof PostToastExtractor.detectPostsStructurally === 'function', 'Has structural detection method');
