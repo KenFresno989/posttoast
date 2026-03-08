@@ -70,6 +70,37 @@
     init();
   }
 
+  // ── SPA Navigation Detection ──
+  // LinkedIn is a SPA — navigations don't reload the content script.
+  // Watch for URL changes and re-initialize when the feed page loads.
+  let lastUrl = location.href;
+  const navigationObserver = new MutationObserver(() => {
+    if (location.href !== lastUrl) {
+      const oldUrl = lastUrl;
+      lastUrl = location.href;
+      console.log(`[PostToast] SPA navigation detected: ${oldUrl} → ${lastUrl}`);
+
+      // Tear down old observer and clear cached state
+      try {
+        PostToastObserver.destroy();
+        PostToastExtractor._feedRoot = null;
+        PostToastExtractor._lastStrategy = null;
+        PostToastExtractor._loggedStrategy = null;
+      } catch (e) {
+        console.warn('[PostToast] Cleanup error on SPA nav:', e);
+      }
+
+      // Re-initialize after a short delay (let LinkedIn render the new page)
+      if (enabled) {
+        setTimeout(() => {
+          console.log('[PostToast] Re-initializing after SPA navigation');
+          startPostToast();
+        }, 1500);
+      }
+    }
+  });
+  navigationObserver.observe(document.body, { childList: true, subtree: true });
+
   function dumpDiagnostics(label) {
     console.log(`[PostToast DIAG] === ${label} ===`);
     console.log('[PostToast DIAG] Feed root:', PostToastExtractor._feedRoot?.tagName, PostToastExtractor._feedRoot?.className?.slice(0, 60));
