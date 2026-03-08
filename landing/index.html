@@ -33,6 +33,32 @@
       --green: #16803C;
       --yellow: #A16B07;
       --red: #C53030;
+      --nav-bg: rgba(250, 247, 242, 0.92);
+      --shadow: rgba(0,0,0,0.06);
+      --signal-border: rgba(0,0,0,0.06);
+      --footer-muted: #9A8E80;
+      --cta-text: #fff;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1A1410;
+        --surface: #241D16;
+        --surface-2: #2E2620;
+        --border: #3D3428;
+        --text: #F2E8DC;
+        --text-muted: #9A8E80;
+        --accent: #D4724A;
+        --accent-dim: rgba(212, 114, 74, 0.12);
+        --green: #22c55e;
+        --yellow: #eab308;
+        --red: #ef4444;
+        --nav-bg: rgba(26, 20, 16, 0.92);
+        --shadow: rgba(0,0,0,0.2);
+        --signal-border: rgba(255,255,255,0.05);
+        --footer-muted: #5A5040;
+        --cta-text: #1A1410;
+      }
     }
 
     body {
@@ -49,7 +75,7 @@
       top: 0;
       width: 100%;
       padding: 16px 24px;
-      background: rgba(250, 247, 242, 0.92);
+      background: var(--nav-bg);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
       z-index: 100;
@@ -69,7 +95,7 @@
 
     .nav-cta {
       background: var(--accent);
-      color: #fff;
+      color: var(--cta-text);
       padding: 8px 20px;
       border-radius: 8px;
       text-decoration: none;
@@ -80,7 +106,7 @@
 
     .nav-cta:hover {
       transform: translateY(-1px);
-      box-shadow: 0 4px 20px rgba(192, 90, 44, 0.25);
+      box-shadow: 0 4px 20px var(--accent-dim);
     }
 
     /* Hero */
@@ -125,7 +151,7 @@
       align-items: center;
       gap: 10px;
       background: var(--accent);
-      color: #fff;
+      color: var(--cta-text);
       padding: 14px 32px;
       border-radius: 12px;
       text-decoration: none;
@@ -136,7 +162,7 @@
 
     .hero-cta:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(192, 90, 44, 0.25);
+      box-shadow: 0 8px 30px var(--accent-dim);
     }
 
     .hero-sub {
@@ -158,7 +184,7 @@
       border-radius: 12px;
       padding: 24px;
       position: relative;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      box-shadow: 0 2px 12px var(--shadow);
     }
 
     .demo-header {
@@ -210,9 +236,9 @@
     .badge:hover { transform: scale(1.05); }
 
     .badge.high {
-      background: rgba(197, 48, 48, 0.1);
+      background: rgba(197, 48, 48, 0.08);
       color: var(--red);
-      border: 1px solid rgba(197, 48, 48, 0.25);
+      border: 1px solid rgba(197, 48, 48, 0.2);
     }
 
     /* Breakdown */
@@ -238,7 +264,7 @@
       justify-content: space-between;
       align-items: center;
       padding: 8px 0;
-      border-bottom: 1px solid rgba(0,0,0,0.06);
+      border-bottom: 1px solid var(--signal-border);
       font-size: 0.9rem;
     }
 
@@ -615,7 +641,7 @@
     <p>🍞 PostToast — Roasting LinkedIn, one post at a time.</p>
     <p style="margin-top: 8px;">Built by an indie dev who scrolled one too many "humbled to announce" posts.</p>
     <p style="margin-top: 12px;"><a href="https://buymeacoffee.com/leeking" class="bmac-link">☕ Buy me a coffee</a> · <a href='/privacy'>Privacy Policy</a></p>
-    <p style="margin-top: 8px; font-size: 0.75rem; color: #9A8E80;">PostToast is a satirical entertainment tool. Not affiliated with, endorsed by, or sponsored by LinkedIn Corporation. LinkedIn is a registered trademark of LinkedIn Corporation.</p>
+    <p style="margin-top: 8px; font-size: 0.75rem; color: var(--footer-muted);">PostToast is a satirical entertainment tool. Not affiliated with, endorsed by, or sponsored by LinkedIn Corporation. LinkedIn is a registered trademark of LinkedIn Corporation.</p>
   </footer>
 
   <script>
