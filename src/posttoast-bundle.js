@@ -1524,6 +1524,41 @@ const PostToastExtractor = {
   },
 
   // ══════════════════════════════════════════════════════════
+  //  Shared/Reshared post filtering
+  // ══════════════════════════════════════════════════════════
+
+  /**
+   * Reshared post selectors — containers that wrap the original post
+   * inside a shared/reposted feed item.
+   */
+  RESHARE_WRAPPERS: [
+    '.feed-shared-update-v2__reshared-content',
+    '[class*="reshared"]',
+    '[class*="repost"]',
+    '[class*="shared-content"]'
+  ],
+
+  /**
+   * Filter out posts that are nested inside another post (reshared/reposted).
+   * Only top-level feed items should be scored — their extractText() already
+   * captures the combined sharer + original text as a single unit.
+   */
+  _filterNestedPosts(posts) {
+    return posts.filter(post => {
+      // Check if this post is inside a reshare wrapper
+      for (const sel of this.RESHARE_WRAPPERS) {
+        if (post.closest(sel)) return false;
+      }
+      // Check if this post is nested inside another post element
+      // (i.e., a post whose ancestor is also in the posts array)
+      for (const other of posts) {
+        if (other !== post && other.contains(post)) return false;
+      }
+      return true;
+    });
+  },
+
+  // ══════════════════════════════════════════════════════════
   //  Core API
   // ══════════════════════════════════════════════════════════
 
@@ -1539,7 +1574,8 @@ const PostToastExtractor = {
       const posts = root.querySelectorAll(sel);
       if (posts.length > 0) {
         this._lastStrategy = 'urn:' + sel;
-        return { posts: Array.from(posts), strategy: this._lastStrategy };
+        const filtered = this._filterNestedPosts(Array.from(posts));
+        return { posts: filtered, strategy: this._lastStrategy };
       }
     }
 
@@ -1548,7 +1584,8 @@ const PostToastExtractor = {
       const posts = root.querySelectorAll(sel);
       if (posts.length > 0) {
         this._lastStrategy = 'css:' + sel;
-        return { posts: Array.from(posts), strategy: this._lastStrategy };
+        const filtered = this._filterNestedPosts(Array.from(posts));
+        return { posts: filtered, strategy: this._lastStrategy };
       }
     }
 
@@ -1562,7 +1599,8 @@ const PostToastExtractor = {
       });
       if (realPosts.length > 0) {
         this._lastStrategy = 'dataAttr:' + sel;
-        return { posts: realPosts, strategy: this._lastStrategy };
+        const filtered = this._filterNestedPosts(realPosts);
+        return { posts: filtered, strategy: this._lastStrategy };
       }
     }
 
@@ -1570,7 +1608,8 @@ const PostToastExtractor = {
     const structuralPosts = this.detectPostsStructurally(root);
     if (structuralPosts.length > 0) {
       this._lastStrategy = 'structural';
-      return { posts: structuralPosts, strategy: this._lastStrategy };
+      const filtered = this._filterNestedPosts(structuralPosts);
+      return { posts: filtered, strategy: this._lastStrategy };
     }
 
     this._lastStrategy = 'none';
