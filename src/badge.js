@@ -84,16 +84,38 @@ const PostToastBadge = {
 
     // Skip non-post elements (sort bar, composer, nav, ads)
     const text = PostToastExtractor.extractText(postElement);
-    if (!text || text.length < 50) return; // Skip empty/tiny elements
+    if (!text || text.length < 50) {
+      if (this._diagCount === undefined) this._diagCount = 0;
+      if (this._diagCount < 5) {
+        console.log('[PostToast DIAG] scorePost skip: text too short or empty.',
+          'textLen=' + (text ? text.length : 0),
+          'innerTextLen=' + (postElement.innerText || '').length,
+          'tag=' + postElement.tagName,
+          'children=' + postElement.children.length);
+        this._diagCount++;
+      }
+      return;
+    }
 
     // Must have engagement buttons to be a real post
     const buttons = postElement.querySelectorAll('button, [role="button"]');
     const buttonTexts = Array.from(buttons).map(b => (b.innerText || b.getAttribute('aria-label') || '').toLowerCase());
     const engagementWords = ['like', 'comment', 'share', 'repost', 'send', 'react', 'love', 'celebrate', 'support', 'insightful', 'funny'];
     const hasEngagement = buttonTexts.some(t => engagementWords.some(w => t.includes(w)));
-    if (!hasEngagement) return; // Not a real post
+    if (!hasEngagement) {
+      if (this._diagEngCount === undefined) this._diagEngCount = 0;
+      if (this._diagEngCount < 5) {
+        console.log('[PostToast DIAG] scorePost skip: no engagement buttons.',
+          'buttons=' + buttons.length,
+          'buttonTexts=' + JSON.stringify(buttonTexts.slice(0, 5)),
+          'textLen=' + text.length);
+        this._diagEngCount++;
+      }
+      return;
+    }
 
     const result = PostToastScorer.score(text);
+    console.log('[PostToast DIAG] scorePost SUCCESS: score=' + result.score, 'textLen=' + text.length);
     this.inject(postElement, result);
   }
 };

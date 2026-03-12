@@ -105,7 +105,7 @@ const PostToastRubric = {
     jargonCount: 2            // jargon words to trigger (was 3)
   }
 };
-// Copyright (c) 2026 PostToast. All rights reserved.
+
 /**
  * PostToast Signal Detectors
  * Each detector returns { detected: bool, points: number, detail: string } or null
@@ -1289,7 +1289,7 @@ const PostToastSignals = {
     return results;
   }
 };
-// Copyright (c) 2026 PostToast. All rights reserved.
+
 /**
  * PostToast Scoring Engine
  * Combines signal detections into a final 0-10 score with quarter-point precision.
@@ -1353,7 +1353,7 @@ const PostToastScorer = {
     return 'pt-red';
   }
 };
-// Copyright (c) 2026 PostToast. All rights reserved.
+
 /**
  * PostToast DOM Extractor v1.4.0
  * Resilient layered selector approach for LinkedIn's A/B-tested DOM.
@@ -1658,16 +1658,23 @@ const PostToastExtractor = {
     for (const selector of this.TEXT_SELECTORS) {
       const elements = postElement.querySelectorAll(selector);
       if (elements.length > 0) {
-        return Array.from(elements)
+        const text = Array.from(elements)
           .map(el => el.innerText || el.textContent)
           .join('\n')
           .trim();
+        if (this._extractDiag < 3) {
+          console.log('[PostToast DIAG] extractText: matched selector', selector, 'len=' + text.length);
+          this._extractDiag = (this._extractDiag || 0) + 1;
+        }
+        return text;
       }
     }
     // Hashed-class fallback: find the largest text block that isn't
     // button/engagement text. Walk child divs, pick the one with most text.
     const candidates = postElement.querySelectorAll('div, span, p');
     let bestText = '';
+    const containerLen = (postElement.innerText || '').length;
+    let skippedBy90 = 0;
     for (const el of candidates) {
       // Skip if it's a button or inside a button
       if (el.closest('button, [role="button"]')) continue;
@@ -1675,14 +1682,29 @@ const PostToastExtractor = {
       // Want the longest text block that's clearly post content
       if (text.length > bestText.length && text.length > 50) {
         // Make sure this isn't the entire post container (too much noise)
-        if (text.length < (postElement.innerText || '').length * 0.9) {
+        if (text.length < containerLen * 0.9) {
           bestText = text;
+        } else {
+          skippedBy90++;
         }
       }
+    }
+    if (this._extractDiag === undefined) this._extractDiag = 0;
+    if (this._extractDiag < 5) {
+      console.log('[PostToast DIAG] extractText hashed-class fallback:',
+        'candidates=' + candidates.length,
+        'containerLen=' + containerLen,
+        'bestTextLen=' + bestText.length,
+        'skippedBy90Filter=' + skippedBy90);
+      this._extractDiag++;
     }
     if (bestText.length > 50) return bestText;
     // Ultimate fallback: full innerText
     const allText = postElement.innerText || '';
+    if (this._extractDiag < 8) {
+      console.log('[PostToast DIAG] extractText ultimate fallback: allTextLen=' + allText.length);
+      this._extractDiag++;
+    }
     return allText.length > 50 ? allText : '';
   },
 
@@ -1722,7 +1744,7 @@ const PostToastExtractor = {
     return this._lastStrategy;
   }
 };
-// Copyright (c) 2026 PostToast. All rights reserved.
+
 /**
  * PostToast Badge
  * Injects score badges into LinkedIn posts.
@@ -1808,20 +1830,42 @@ const PostToastBadge = {
 
     // Skip non-post elements (sort bar, composer, nav, ads)
     const text = PostToastExtractor.extractText(postElement);
-    if (!text || text.length < 50) return; // Skip empty/tiny elements
+    if (!text || text.length < 50) {
+      if (this._diagCount === undefined) this._diagCount = 0;
+      if (this._diagCount < 5) {
+        console.log('[PostToast DIAG] scorePost skip: text too short or empty.',
+          'textLen=' + (text ? text.length : 0),
+          'innerTextLen=' + (postElement.innerText || '').length,
+          'tag=' + postElement.tagName,
+          'children=' + postElement.children.length);
+        this._diagCount++;
+      }
+      return;
+    }
 
     // Must have engagement buttons to be a real post
     const buttons = postElement.querySelectorAll('button, [role="button"]');
     const buttonTexts = Array.from(buttons).map(b => (b.innerText || b.getAttribute('aria-label') || '').toLowerCase());
     const engagementWords = ['like', 'comment', 'share', 'repost', 'send', 'react', 'love', 'celebrate', 'support', 'insightful', 'funny'];
     const hasEngagement = buttonTexts.some(t => engagementWords.some(w => t.includes(w)));
-    if (!hasEngagement) return; // Not a real post
+    if (!hasEngagement) {
+      if (this._diagEngCount === undefined) this._diagEngCount = 0;
+      if (this._diagEngCount < 5) {
+        console.log('[PostToast DIAG] scorePost skip: no engagement buttons.',
+          'buttons=' + buttons.length,
+          'buttonTexts=' + JSON.stringify(buttonTexts.slice(0, 5)),
+          'textLen=' + text.length);
+        this._diagEngCount++;
+      }
+      return;
+    }
 
     const result = PostToastScorer.score(text);
+    console.log('[PostToast DIAG] scorePost SUCCESS: score=' + result.score, 'textLen=' + text.length);
     this.inject(postElement, result);
   }
 };
-// Copyright (c) 2026 PostToast. All rights reserved.
+
 /**
  * PostToast Breakdown Panel
  * Shows detailed signal breakdown when badge is clicked.
@@ -1968,7 +2012,7 @@ const PostToastBreakdown = {
     return panel;
   }
 };
-// Copyright (c) 2026 PostToast. All rights reserved.
+
 /**
  * PostToast Observer v1.4.0
  * Watches for new posts loaded via infinite scroll and scores them.
@@ -2081,7 +2125,7 @@ const PostToastObserver = {
     }
   }
 };
-// Copyright (c) 2026 PostToast. All rights reserved.
+
 /**
  * PostToast Content Script — Entry Point
  * Initializes PostToast on LinkedIn pages.

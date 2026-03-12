@@ -303,16 +303,23 @@ const PostToastExtractor = {
     for (const selector of this.TEXT_SELECTORS) {
       const elements = postElement.querySelectorAll(selector);
       if (elements.length > 0) {
-        return Array.from(elements)
+        const text = Array.from(elements)
           .map(el => el.innerText || el.textContent)
           .join('\n')
           .trim();
+        if (this._extractDiag < 3) {
+          console.log('[PostToast DIAG] extractText: matched selector', selector, 'len=' + text.length);
+          this._extractDiag = (this._extractDiag || 0) + 1;
+        }
+        return text;
       }
     }
     // Hashed-class fallback: find the largest text block that isn't
     // button/engagement text. Walk child divs, pick the one with most text.
     const candidates = postElement.querySelectorAll('div, span, p');
     let bestText = '';
+    const containerLen = (postElement.innerText || '').length;
+    let skippedBy90 = 0;
     for (const el of candidates) {
       // Skip if it's a button or inside a button
       if (el.closest('button, [role="button"]')) continue;
@@ -320,14 +327,29 @@ const PostToastExtractor = {
       // Want the longest text block that's clearly post content
       if (text.length > bestText.length && text.length > 50) {
         // Make sure this isn't the entire post container (too much noise)
-        if (text.length < (postElement.innerText || '').length * 0.9) {
+        if (text.length < containerLen * 0.9) {
           bestText = text;
+        } else {
+          skippedBy90++;
         }
       }
+    }
+    if (this._extractDiag === undefined) this._extractDiag = 0;
+    if (this._extractDiag < 5) {
+      console.log('[PostToast DIAG] extractText hashed-class fallback:',
+        'candidates=' + candidates.length,
+        'containerLen=' + containerLen,
+        'bestTextLen=' + bestText.length,
+        'skippedBy90Filter=' + skippedBy90);
+      this._extractDiag++;
     }
     if (bestText.length > 50) return bestText;
     // Ultimate fallback: full innerText
     const allText = postElement.innerText || '';
+    if (this._extractDiag < 8) {
+      console.log('[PostToast DIAG] extractText ultimate fallback: allTextLen=' + allText.length);
+      this._extractDiag++;
+    }
     return allText.length > 50 ? allText : '';
   },
 
