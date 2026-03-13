@@ -1663,7 +1663,7 @@ const PostToastExtractor = {
           .join('\n')
           .trim();
         if (this._extractDiag < 3) {
-          console.log('[PostToast DIAG] extractText: matched selector', selector, 'len=' + text.length);
+          console.warn('[PostToast DIAG] extractText: matched selector', selector, 'len=' + text.length);
           this._extractDiag = (this._extractDiag || 0) + 1;
         }
         return text;
@@ -1691,7 +1691,7 @@ const PostToastExtractor = {
     }
     if (this._extractDiag === undefined) this._extractDiag = 0;
     if (this._extractDiag < 5) {
-      console.log('[PostToast DIAG] extractText hashed-class fallback:',
+      console.warn('[PostToast DIAG] extractText hashed-class fallback:',
         'candidates=' + candidates.length,
         'containerLen=' + containerLen,
         'bestTextLen=' + bestText.length,
@@ -1702,7 +1702,7 @@ const PostToastExtractor = {
     // Ultimate fallback: full innerText
     const allText = postElement.innerText || '';
     if (this._extractDiag < 8) {
-      console.log('[PostToast DIAG] extractText ultimate fallback: allTextLen=' + allText.length);
+      console.warn('[PostToast DIAG] extractText ultimate fallback: allTextLen=' + allText.length);
       this._extractDiag++;
     }
     return allText.length > 50 ? allText : '';
@@ -1828,18 +1828,18 @@ const PostToastBadge = {
   scorePost(postElement) {
     if (this.isScored(postElement)) return;
 
+    // Mark as attempted immediately to prevent infinite retry loops
+    this.markScored(postElement);
+
     // Skip non-post elements (sort bar, composer, nav, ads)
     const text = PostToastExtractor.extractText(postElement);
     if (!text || text.length < 50) {
-      if (this._diagCount === undefined) this._diagCount = 0;
-      if (this._diagCount < 5) {
-        console.log('[PostToast DIAG] scorePost skip: text too short or empty.',
-          'textLen=' + (text ? text.length : 0),
-          'innerTextLen=' + (postElement.innerText || '').length,
-          'tag=' + postElement.tagName,
-          'children=' + postElement.children.length);
-        this._diagCount++;
-      }
+      console.warn('[PostToast DIAG] scorePost SKIP: text too short.',
+        'textLen=' + (text ? text.length : 0),
+        'innerTextLen=' + (postElement.innerText || '').length,
+        'tag=' + postElement.tagName,
+        'children=' + postElement.children.length,
+        'sample=' + JSON.stringify((postElement.innerText || '').slice(0, 120)));
       return;
     }
 
@@ -1849,19 +1849,15 @@ const PostToastBadge = {
     const engagementWords = ['like', 'comment', 'share', 'repost', 'send', 'react', 'love', 'celebrate', 'support', 'insightful', 'funny'];
     const hasEngagement = buttonTexts.some(t => engagementWords.some(w => t.includes(w)));
     if (!hasEngagement) {
-      if (this._diagEngCount === undefined) this._diagEngCount = 0;
-      if (this._diagEngCount < 5) {
-        console.log('[PostToast DIAG] scorePost skip: no engagement buttons.',
-          'buttons=' + buttons.length,
-          'buttonTexts=' + JSON.stringify(buttonTexts.slice(0, 5)),
-          'textLen=' + text.length);
-        this._diagEngCount++;
-      }
+      console.warn('[PostToast DIAG] scorePost SKIP: no engagement buttons.',
+        'buttons=' + buttons.length,
+        'buttonTexts=' + JSON.stringify(buttonTexts.slice(0, 8)),
+        'textLen=' + text.length);
       return;
     }
 
     const result = PostToastScorer.score(text);
-    console.log('[PostToast DIAG] scorePost SUCCESS: score=' + result.score, 'textLen=' + text.length);
+    console.warn('[PostToast DIAG] scorePost SUCCESS: score=' + result.score, 'textLen=' + text.length);
     this.inject(postElement, result);
   }
 };

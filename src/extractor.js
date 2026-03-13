@@ -308,7 +308,7 @@ const PostToastExtractor = {
           .join('\n')
           .trim();
         if (this._extractDiag < 3) {
-          console.log('[PostToast DIAG] extractText: matched selector', selector, 'len=' + text.length);
+          console.warn('[PostToast DIAG] extractText: matched selector', selector, 'len=' + text.length);
           this._extractDiag = (this._extractDiag || 0) + 1;
         }
         return text;
@@ -336,7 +336,7 @@ const PostToastExtractor = {
     }
     if (this._extractDiag === undefined) this._extractDiag = 0;
     if (this._extractDiag < 5) {
-      console.log('[PostToast DIAG] extractText hashed-class fallback:',
+      console.warn('[PostToast DIAG] extractText hashed-class fallback:',
         'candidates=' + candidates.length,
         'containerLen=' + containerLen,
         'bestTextLen=' + bestText.length,
@@ -347,7 +347,7 @@ const PostToastExtractor = {
     // Ultimate fallback: full innerText
     const allText = postElement.innerText || '';
     if (this._extractDiag < 8) {
-      console.log('[PostToast DIAG] extractText ultimate fallback: allTextLen=' + allText.length);
+      console.warn('[PostToast DIAG] extractText ultimate fallback: allTextLen=' + allText.length);
       this._extractDiag++;
     }
     return allText.length > 50 ? allText : '';
