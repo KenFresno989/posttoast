@@ -2098,14 +2098,16 @@ const PostToastObserver = {
     try {
       const posts = PostToastExtractor.getAllPosts();
       const strategy = PostToastExtractor.getLastStrategy();
-      console.log(`[PostToast] Scoring ${posts.length} posts (strategy: ${strategy})`);
-      for (const post of posts) {
-        if (!PostToastBadge.isScored(post)) {
-          try {
-            PostToastBadge.scorePost(post);
-          } catch (err) {
-            console.error('[PostToast] Error scoring post:', err);
-          }
+      const unscored = posts.filter(p => !PostToastBadge.isScored(p));
+      // Only log when there's something new to score (reduce spam)
+      if (unscored.length > 0) {
+        console.log(`[PostToast] Scoring ${unscored.length} new posts of ${posts.length} total (strategy: ${strategy})`);
+      }
+      for (const post of unscored) {
+        try {
+          PostToastBadge.scorePost(post);
+        } catch (err) {
+          console.error('[PostToast] Error scoring post:', err);
         }
       }
     } catch (err) {
