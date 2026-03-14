@@ -109,3 +109,136 @@ body {
 .pt-bmac-link:hover {
   color: #f59e0b !important;
 }
+
+/* Feedback Section */
+.pt-feedback-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #2d2d44;
+}
+
+.pt-feedback-toggle {
+  width: 100%;
+  padding: 10px;
+  background: #2d2d44;
+  color: #e0e0e0;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.pt-feedback-toggle:hover {
+  background: #3a3a54;
+}
+
+.pt-feedback-form {
+  margin-top: 12px;
+}
+
+.pt-feedback-categories {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.pt-category-btn {
+  flex: 1;
+  padding: 8px 6px;
+  background: #2d2d44;
+  color: #888;
+  border: 1px solid #2d2d44;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pt-category-btn:hover {
+  background: #3a3a54;
+  color: #e0e0e0;
+}
+
+.pt-category-btn.pt-active {
+  background: #f59e0b;
+  color: #1a1a2e;
+  border-color: #f59e0b;
+}
+
+.pt-feedback-textarea {
+  width: 100%;
+  padding: 10px;
+  background: #2d2d44;
+  color: #e0e0e0;
+  border: 1px solid #3a3a54;
+  border-radius: 6px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 12px;
+  resize: vertical;
+  margin-bottom: 10px;
+}
+
+.pt-feedback-textarea::placeholder {
+  color: #666;
+}
+
+.pt-feedback-textarea:focus {
+  outline: none;
+  border-color: #f59e0b;
+}
+
+.pt-feedback-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pt-feedback-submit,
+.pt-feedback-copy {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pt-feedback-submit {
+  background: #f59e0b;
+  color: #1a1a2e;
+}
+
+.pt-feedback-submit:hover {
+  background: #ff9800;
+}
+
+.pt-feedback-submit:disabled {
+  background: #555;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.pt-feedback-copy {
+  background: #2d2d44;
+  color: #e0e0e0;
+}
+
+.pt-feedback-copy:hover {
+  background: #3a3a54;
+}
+
+.pt-feedback-thanks {
+  text-align: center;
+  padding: 12px;
+  background: #2d2d44;
+  color: #22c55e;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 10px;
+}

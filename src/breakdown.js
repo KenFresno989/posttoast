@@ -118,6 +118,9 @@ const PostToastBreakdown = {
       <div class="pt-breakdown-footer">
         🍞 PostToast — Roasting LinkedIn, one post at a time
       </div>
+      <div class="pt-feedback-link-wrapper">
+        <a href="#" class="pt-feedback-link" id="pt-feedback-link">Wrong score? Send feedback</a>
+      </div>
     `;
 
     panel.innerHTML = html;
@@ -139,6 +142,26 @@ const PostToastBreakdown = {
             shareBtn.classList.remove('pt-copied');
           }, 2000);
         });
+      });
+    }
+
+    // Feedback link handler
+    const feedbackLink = panel.querySelector('.pt-feedback-link');
+    if (feedbackLink) {
+      feedbackLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const version = chrome.runtime.getManifest().version;
+        const browser = navigator.userAgent;
+        const scoreDisplay = result.score % 1 === 0 ? result.score.toFixed(0) : result.score.toFixed(result.score % 0.5 === 0 ? 1 : 2);
+        const signalList = result.signals.map(s => `${s.icon} ${s.label}: +${s.points}`).join('\n');
+        
+        const subject = '[PostToast Bug Report] Wrong Score';
+        const body = `I think the score is wrong for this post:\n\nScore: ${scoreDisplay}/10\nSignals detected:\n${signalList}\n\nWhat I think the issue is:\n[Please describe]\n\n---\nExtension Version: ${version}\nBrowser: ${browser}`;
+        
+        const mailto = `mailto:posttoastapp@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.open(mailto, '_blank');
       });
     }
 

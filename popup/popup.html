@@ -28,6 +28,34 @@
       <a href="https://buymeacoffee.com/leeking" target="_blank" class="pt-bmac-link">☕ Fuel the roast</a>
       <span id="version">v...</span>
     </div>
+
+    <!-- Feedback Section -->
+    <div class="pt-feedback-section">
+      <button class="pt-feedback-toggle" id="feedbackToggle">💬 Send Feedback</button>
+      
+      <div class="pt-feedback-form" id="feedbackForm" style="display: none;">
+        <div class="pt-feedback-categories">
+          <button class="pt-category-btn" data-category="Bug Report">🐛 Bug Report</button>
+          <button class="pt-category-btn" data-category="Feature Request">💡 Feature Request</button>
+        </div>
+        
+        <textarea 
+          class="pt-feedback-textarea" 
+          id="feedbackText" 
+          placeholder="What's not working? What should we add?"
+          rows="4"
+        ></textarea>
+        
+        <div class="pt-feedback-actions">
+          <button class="pt-feedback-submit" id="feedbackSubmit">Send via Email</button>
+          <button class="pt-feedback-copy" id="feedbackCopy">Copy to Clipboard</button>
+        </div>
+        
+        <div class="pt-feedback-thanks" id="feedbackThanks" style="display: none;">
+          Thanks for your feedback! 🙏
+        </div>
+      </div>
+    </div>
   </div>
   <script src="popup.js"></script>
 </body>
