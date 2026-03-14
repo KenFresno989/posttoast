@@ -29,7 +29,8 @@ const PostToastRubric = {
     fabricatedParable: { points: 2.5, icon: '📖', label: 'Fabricated Parable' },
     firingGenre: { points: 2.0, icon: '🔥', label: 'The Firing Genre' },
     privilegeVulnerability: { points: 2.0, icon: '😢', label: 'Crying in My Tesla' },
-    stolenValor: { points: 2.0, icon: '🎭', label: 'Stolen Valor Story' }
+    stolenValor: { points: 2.0, icon: '🎭', label: 'Stolen Valor Story' },
+    replyGuyEnergy: { points: 0.5, icon: '🙋', label: 'Reply Guy Energy' }
   },
 
   // Tier 2: Core Cringe
@@ -41,6 +42,11 @@ const PostToastRubric = {
     nameDrop: { points: 1.0, icon: '📛', label: 'Name Dropping' },
     selflessHiring: { points: 1.25, icon: '🦸', label: 'Selfless Hiring Post' },
     garySpeech: { points: 1.0, icon: '🎤', label: 'Hustle Porn' },
+    stealthFlex: { points: 0.75, icon: '💰', label: 'Stealth Flex' },
+    researchSelfPromo: { points: 0.75, icon: '📊', label: 'Research Self-Promo' },
+    engagementBaitCliffhanger: { points: 0.75, icon: '🎣', label: 'Engagement Bait' },
+    recruiterCringe: { points: 0.75, icon: '📢', label: 'Recruiter Cringe' },
+    fakeVulnerability: { points: 0.75, icon: '🛡️', label: 'Fake Vulnerability' },
     humblebait: { points: 1.0, icon: '🪤', label: 'Humblebait' },
     gratitudeTheater: { points: 1.0, icon: '🎭', label: 'Gratitude Theater' },
     traumaFlex: { points: 1.5, icon: '💪', label: 'Trauma Flexing' },
@@ -61,7 +67,9 @@ const PostToastRubric = {
     hashtagSpam: { points: 0.75, icon: '#️⃣', label: 'Hashtag Spam' },
     corporateHaiku: { points: 0.75, icon: '🏯', label: 'Corporate Haiku' },
     selfiSermon: { points: 0.5, icon: '🤳', label: 'Selfie Sermon' },
-    recruiterBait: { points: 0.5, icon: '🎯', label: 'Recruiter Bait' }
+    recruiterBait: { points: 0.5, icon: '🎯', label: 'Recruiter Bait' },
+    povertyCosplay: { points: 1.0, icon: '🎭', label: 'Poverty Cosplay' },
+    linkedInAsTherapy: { points: 1.0, icon: '🛋️', label: 'LinkedIn as Therapy' }
   },
 
   // Roast headlines per score bracket
@@ -329,6 +337,121 @@ const PostToastSignals = {
   },
 
   // ========== NEW TIER 2 SIGNALS ==========
+
+  detectStealthFlex(text) {
+    const dollarMatch = text.match(/\$(\d+(?:,\d{3})*(?:\.\d+)?)\s*([KkMmBb])\b/g);
+    const bigDollars = dollarMatch ? dollarMatch.filter(m => {
+      const val = m.replace(/[$,]/g, '').toLowerCase();
+      const num = parseFloat(val);
+      const mult = val.includes('m') ? 1e6 : val.includes('b') ? 1e9 : val.includes('k') ? 1e3 : 1;
+      return (num * mult) >= 1e6;
+    }) : [];
+
+    const userCountMatch = text.match(/(\d+(?:,\d{3})*(?:\.\d+)?)\s*([KkMm])?\s*(?:users?|customers?|clients?|professionals?)/ig);
+    const bigUsers = userCountMatch ? userCountMatch.filter(m => {
+      const num = parseFloat(m.replace(/[,]/g, ''));
+      return num >= 10000 || m.toLowerCase().includes('m');
+    }) : [];
+
+    const contextWords = /(?:market|revenue|arr|raised|serving|reached|captured|managing|leading|enterprise)/i;
+    const hasContext = contextWords.test(text);
+
+    if ((bigDollars.length > 0 || bigUsers.length > 0) && hasContext) {
+      const r = PostToastRubric.tier2.stealthFlex;
+      return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: 'Casually dropping impressive numbers to signal scale' };
+    }
+    return null;
+  },
+
+  detectResearchSelfPromo(text) {
+    const firstPersonPlural = /\b(?:we|our)\b/i.test(text);
+    const researchKeywords = /(?:data shows?|research (?:reveals?|shows?|indicates?)|survey(?:ed)?|study|findings?|whitepaper|guide|report|discovered that|latest (?:research|report|guide))/i;
+    const ctaHints = /(?:download|read|check out|get (?:the|our)|link in|visit|access)/i;
+
+    if (firstPersonPlural && researchKeywords.test(text)) {
+      const r = PostToastRubric.tier2.researchSelfPromo;
+      const hasCTA = ctaHints.test(text);
+      return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: hasCTA ? 'Company marketing dressed up as research insights + CTA' : 'Framing company marketing as thought leadership' };
+    }
+    return null;
+  },
+
+  detectEngagementBaitCliffhanger(text) {
+    const patterns = [
+      /the answer (?:surprised|shocked|amazed) me/i,
+      /here'?s what happened (?:next|after)/i,
+      /what i found (?:shocked|surprised|amazed) me/i,
+      /you (?:won'?t|wouldn'?t) believe what (?:happened|I)/i,
+      /(?:and |but )?(?:then |)everything changed/i,
+      /the results?\?? i'?ll share in the comments/i,
+      /(?:but |and )?that'?s not even the best part/i,
+      /wait (?:until|till) you (?:hear|see|read)/i,
+      /(?:keep reading|read on|scroll down) to (?:find out|see|learn)/i
+    ];
+
+    if (patterns.some(p => p.test(text))) {
+      const r = PostToastRubric.tier2.engagementBaitCliffhanger;
+      return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: 'Teasing a story to force engagement — BuzzFeed energy' };
+    }
+    return null;
+  },
+
+  detectPovertyCosplay(text) {
+    const humility = /(?:i (?:drove|drive) a (?:used |old |beat.?up )?(?:honda|toyota|corolla|civic)|i (?:still )?fly economy|i don'?t own a (?:fancy )?watch|i eat lunch at my desk|my office is a coffee shop|i wear the same (?:outfit|clothes)|i (?:still )?(?:live|lived) in a (?:small |tiny )?(?:apartment|studio)|modest (?:car|home|apartment))/i;
+    const success = /(?:ceo|founder|raised|million|billion|company|built|board meeting|startup|enterprise|executive|portfolio|venture)/i;
+
+    if (humility.test(text) && success.test(text)) {
+      const r = PostToastRubric.tier3.povertyCosplay;
+      return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: 'Rich person pretending to be humble about material things' };
+    }
+    return null;
+  },
+
+  detectLinkedInAsTherapy(text) {
+    const trauma = /(?:divorce|depression|anxiety|diagnosed|funeral|grief|trauma|hospitalized|rehab|therapy|bankruptcy|evicted|miscarriage|panic attack|suicide|addiction|abusive|domestic violence|mental health crisis)/i;
+    const businessPivot = /(?:taught me (?:about )?(?:leadership|business|management)|what (?:business|leaders?|managers?) can learn|(?:leadership|business|career|professional) lesson|takeaway|here'?s what i learned|changed how i (?:manage|lead|run|think about (?:business|work)))/i;
+
+    if (trauma.test(text) && businessPivot.test(text)) {
+      const r = PostToastRubric.tier3.linkedInAsTherapy;
+      return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: 'Oversharing personal trauma for professional engagement' };
+    }
+    return null;
+  },
+
+  detectRecruiterCringe(text) {
+    const recruiting = /(?:we'?re (?:hiring|looking for|seeking)|join (?:our |us|the )?team|(?:role|position|opportunity) (?:available|open)|looking for|seeking)/i;
+    const cringeModifiers = /(?:not just (?:hiring|a job|looking)|we'?re building a (?:family|tribe|movement)|(?:rockstar|ninja|guru|unicorn|wizard|superstar|10x|rock star)s?|disrupting (?:the )?industry|(?:this isn'?t|not) (?:just )?a job|fast.?paced environment|unicorn opportunity|game.?changer|revolutionize|move fast|break things)/i;
+
+    if (recruiting.test(text) && cringeModifiers.test(text)) {
+      const r = PostToastRubric.tier2.recruiterCringe;
+      return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: 'Recruiter using over-the-top language about roles' };
+    }
+    return null;
+  },
+
+  detectFakeVulnerability(text) {
+    const vulnerabilityFrame = /(?:unpopular opinion|hot take|controversial|i'?ll (?:probably )?get hate for this|people (?:won'?t|might not) agree|(?:this is )?going to be unpopular|might be controversial|this might upset)/i;
+    const agreeableStatement = /(?:be kind|work.?life balance|mental health|treat people|family (?:matters|comes first)|kindness|empathy|listen|respect|diversity|inclusion|people (?:are|deserve)|health (?:matters|is important))/i;
+
+    if (vulnerabilityFrame.test(text) && agreeableStatement.test(text)) {
+      const r = PostToastRubric.tier2.fakeVulnerability;
+      return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: 'Prefacing a universally agreeable take with "unpopular opinion"' };
+    }
+    return null;
+  },
+
+  detectReplyGuyEnergy(text) {
+    const shortPost = text.length < 100;
+    const agreement = /^(?:this\.?\s*(?:so )?(?:much )?this|couldn'?t agree more|this\s*👏\s*is\s*👏|well said|exactly (?:this|right)|spot on|(?:say|preach) it louder|100%|absolutely (?:this|right)|couldn'?t have said it better)/i;
+    const hasMention = /@\w+/.test(text) || /well said \w+/i.test(text);
+    const noOriginalThought = text.split(/\s+/).length <= 15;
+
+    if (shortPost && agreement.test(text) && (hasMention || noOriginalThought)) {
+      const r = PostToastRubric.tier1.replyGuyEnergy;
+      return { detected: true, points: r.points, icon: r.icon, label: r.label, detail: 'Sycophantic agreement with zero original thought' };
+    }
+    return null;
+  },
 
   detectHumblebait(text) {
     const patterns = [
@@ -1250,15 +1373,19 @@ const PostToastSignals = {
     const detectors = [
       // Tier 1
       'detectFabricatedParable', 'detectFiringGenre', 'detectPrivilegeVulnerability', 'detectStolenValor',
+      'detectReplyGuyEnergy',
       // Tier 2
       'detectHumbleBrag', 'detectThoughtLeader', 'detectEngagementBait', 'detectToxicPositivity',
       'detectNameDrop', 'detectSelflessHiring', 'detectMotivationalSpeech',
+      'detectStealthFlex', 'detectResearchSelfPromo', 'detectEngagementBaitCliffhanger',
+      'detectRecruiterCringe', 'detectFakeVulnerability',
       'detectHumblebait', 'detectGratitudeTheater', 'detectTraumaFlex', 'detectEchoChamber',
       'detectPivotBrag', 'detectEmpathyCosplay', 'detectLinkedInfluencer', 'detectCredentialedRant',
       // Tier 3
       'detectEmojiAbuse', 'detectBroetry', 'detectCorporateJargon', 'detectNarcissismIndex',
       'detectDramaticBreaks', 'detectHashtagSpam', 'detectCorporateHaiku', 'detectSelfieSermon',
       'detectRecruiterBait', 'detectLinkedInness', 'detectInfomercial',
+      'detectPovertyCosplay', 'detectLinkedInAsTherapy',
       'detectFortuneCookie', 'detectLetterCloser', 'detectThirdPersonSelfPromo',
       'detectCopypasta', 'detectAtFirstThenRealized', 'detectOverworkBrag',
       'detectFacebookOnLinkedIn', 'detectDisproportionateGratitude',

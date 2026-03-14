@@ -29,7 +29,8 @@ const PostToastRubric = {
     fabricatedParable: { points: 2.5, icon: '📖', label: 'Fabricated Parable' },
     firingGenre: { points: 2.0, icon: '🔥', label: 'The Firing Genre' },
     privilegeVulnerability: { points: 2.0, icon: '😢', label: 'Crying in My Tesla' },
-    stolenValor: { points: 2.0, icon: '🎭', label: 'Stolen Valor Story' }
+    stolenValor: { points: 2.0, icon: '🎭', label: 'Stolen Valor Story' },
+    replyGuyEnergy: { points: 0.5, icon: '🙋', label: 'Reply Guy Energy' }
   },
 
   // Tier 2: Core Cringe
@@ -41,6 +42,11 @@ const PostToastRubric = {
     nameDrop: { points: 1.0, icon: '📛', label: 'Name Dropping' },
     selflessHiring: { points: 1.25, icon: '🦸', label: 'Selfless Hiring Post' },
     garySpeech: { points: 1.0, icon: '🎤', label: 'Hustle Porn' },
+    stealthFlex: { points: 0.75, icon: '💰', label: 'Stealth Flex' },
+    researchSelfPromo: { points: 0.75, icon: '📊', label: 'Research Self-Promo' },
+    engagementBaitCliffhanger: { points: 0.75, icon: '🎣', label: 'Engagement Bait' },
+    recruiterCringe: { points: 0.75, icon: '📢', label: 'Recruiter Cringe' },
+    fakeVulnerability: { points: 0.75, icon: '🛡️', label: 'Fake Vulnerability' },
     humblebait: { points: 1.0, icon: '🪤', label: 'Humblebait' },
     gratitudeTheater: { points: 1.0, icon: '🎭', label: 'Gratitude Theater' },
     traumaFlex: { points: 1.5, icon: '💪', label: 'Trauma Flexing' },
@@ -61,7 +67,9 @@ const PostToastRubric = {
     hashtagSpam: { points: 0.75, icon: '#️⃣', label: 'Hashtag Spam' },
     corporateHaiku: { points: 0.75, icon: '🏯', label: 'Corporate Haiku' },
     selfiSermon: { points: 0.5, icon: '🤳', label: 'Selfie Sermon' },
-    recruiterBait: { points: 0.5, icon: '🎯', label: 'Recruiter Bait' }
+    recruiterBait: { points: 0.5, icon: '🎯', label: 'Recruiter Bait' },
+    povertyCosplay: { points: 1.0, icon: '🎭', label: 'Poverty Cosplay' },
+    linkedInAsTherapy: { points: 1.0, icon: '🛋️', label: 'LinkedIn as Therapy' }
   },
 
   // Roast headlines per score bracket
