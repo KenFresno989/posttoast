@@ -82,36 +82,18 @@ const PostToastBadge = {
   scorePost(postElement) {
     if (this.isScored(postElement)) return;
 
-    // Mark as attempted immediately to prevent infinite retry loops
-    this.markScored(postElement);
-
     // Skip non-post elements (sort bar, composer, nav, ads)
     const text = PostToastExtractor.extractText(postElement);
-    if (!text || text.length < 50) {
-      console.warn('[PostToast DIAG] scorePost SKIP: text too short.',
-        'textLen=' + (text ? text.length : 0),
-        'innerTextLen=' + (postElement.innerText || '').length,
-        'tag=' + postElement.tagName,
-        'children=' + postElement.children.length,
-        'sample=' + JSON.stringify((postElement.innerText || '').slice(0, 120)));
-      return;
-    }
+    if (!text || text.length < 50) return;
 
     // Must have engagement buttons to be a real post
     const buttons = postElement.querySelectorAll('button, [role="button"]');
     const buttonTexts = Array.from(buttons).map(b => (b.innerText || b.getAttribute('aria-label') || '').toLowerCase());
     const engagementWords = ['like', 'comment', 'share', 'repost', 'send', 'react', 'love', 'celebrate', 'support', 'insightful', 'funny'];
     const hasEngagement = buttonTexts.some(t => engagementWords.some(w => t.includes(w)));
-    if (!hasEngagement) {
-      console.warn('[PostToast DIAG] scorePost SKIP: no engagement buttons.',
-        'buttons=' + buttons.length,
-        'buttonTexts=' + JSON.stringify(buttonTexts.slice(0, 8)),
-        'textLen=' + text.length);
-      return;
-    }
+    if (!hasEngagement) return;
 
     const result = PostToastScorer.score(text);
-    console.warn('[PostToast DIAG] scorePost SUCCESS: score=' + result.score, 'textLen=' + text.length);
     this.inject(postElement, result);
   }
 };

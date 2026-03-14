@@ -1414,7 +1414,8 @@ const PostToastExtractor = {
     '.update-components-text .break-words',
     '.feed-shared-inline-show-more-text span[dir="ltr"]',
     '.feed-shared-update-v2__commentary span[dir="ltr"]',
-    '.feed-shared-update-v2__commentary .break-words'
+    '.feed-shared-update-v2__commentary .break-words',
+    'span[dir="ltr"]' // Universal selector — works in both standard and hashed-class DOM
   ],
 
   // ── Post author selectors ──
@@ -1595,7 +1596,13 @@ const PostToastExtractor = {
       // Filter to only post-like elements (skip composer, sort bar, dividers)
       const realPosts = Array.from(posts).filter(el => {
         const text = (el.innerText || el.textContent || '').trim();
-        return text.length > 100;
+        if (text.length < 100) return false;
+        // Validate: a real post should have engagement buttons inside it
+        const buttons = el.querySelectorAll('button, [role="button"]');
+        if (buttons.length < 2) return false;
+        const buttonTexts = Array.from(buttons).map(b => (b.innerText || b.getAttribute('aria-label') || '').toLowerCase());
+        const engagementWords = ['like', 'comment', 'share', 'repost', 'send', 'react', 'love', 'celebrate', 'support', 'insightful', 'funny'];
+        return buttonTexts.some(t => engagementWords.some(w => t.includes(w)));
       });
       if (realPosts.length > 0) {
         this._lastStrategy = 'dataAttr:' + sel;
@@ -1662,11 +1669,7 @@ const PostToastExtractor = {
           .map(el => el.innerText || el.textContent)
           .join('\n')
           .trim();
-        if (this._extractDiag < 3) {
-          console.warn('[PostToast DIAG] extractText: matched selector', selector, 'len=' + text.length);
-          this._extractDiag = (this._extractDiag || 0) + 1;
-        }
-        return text;
+        if (text.length > 50) return text;
       }
     }
     // Hashed-class fallback: find the largest text block that isn't
@@ -1674,37 +1677,23 @@ const PostToastExtractor = {
     const candidates = postElement.querySelectorAll('div, span, p');
     let bestText = '';
     const containerLen = (postElement.innerText || '').length;
-    let skippedBy90 = 0;
     for (const el of candidates) {
       // Skip if it's a button or inside a button
       if (el.closest('button, [role="button"]')) continue;
       const text = (el.innerText || el.textContent || '').trim();
       // Want the longest text block that's clearly post content
       if (text.length > bestText.length && text.length > 50) {
-        // Make sure this isn't the entire post container (too much noise)
-        if (text.length < containerLen * 0.9) {
+        // Relax container filter: for dataAttr posts, the container IS the post,
+        // so the largest text block might be 90%+ of the container. That's fine.
+        // Only reject if it's 100% (i.e., we'd be returning the entire container).
+        if (text.length < containerLen) {
           bestText = text;
-        } else {
-          skippedBy90++;
         }
       }
     }
-    if (this._extractDiag === undefined) this._extractDiag = 0;
-    if (this._extractDiag < 5) {
-      console.warn('[PostToast DIAG] extractText hashed-class fallback:',
-        'candidates=' + candidates.length,
-        'containerLen=' + containerLen,
-        'bestTextLen=' + bestText.length,
-        'skippedBy90Filter=' + skippedBy90);
-      this._extractDiag++;
-    }
     if (bestText.length > 50) return bestText;
-    // Ultimate fallback: full innerText
+    // Ultimate fallback: full innerText (filter out noise by checking for engagement buttons)
     const allText = postElement.innerText || '';
-    if (this._extractDiag < 8) {
-      console.warn('[PostToast DIAG] extractText ultimate fallback: allTextLen=' + allText.length);
-      this._extractDiag++;
-    }
     return allText.length > 50 ? allText : '';
   },
 
@@ -1828,36 +1817,18 @@ const PostToastBadge = {
   scorePost(postElement) {
     if (this.isScored(postElement)) return;
 
-    // Mark as attempted immediately to prevent infinite retry loops
-    this.markScored(postElement);
-
     // Skip non-post elements (sort bar, composer, nav, ads)
     const text = PostToastExtractor.extractText(postElement);
-    if (!text || text.length < 50) {
-      console.warn('[PostToast DIAG] scorePost SKIP: text too short.',
-        'textLen=' + (text ? text.length : 0),
-        'innerTextLen=' + (postElement.innerText || '').length,
-        'tag=' + postElement.tagName,
-        'children=' + postElement.children.length,
-        'sample=' + JSON.stringify((postElement.innerText || '').slice(0, 120)));
-      return;
-    }
+    if (!text || text.length < 50) return;
 
     // Must have engagement buttons to be a real post
     const buttons = postElement.querySelectorAll('button, [role="button"]');
     const buttonTexts = Array.from(buttons).map(b => (b.innerText || b.getAttribute('aria-label') || '').toLowerCase());
     const engagementWords = ['like', 'comment', 'share', 'repost', 'send', 'react', 'love', 'celebrate', 'support', 'insightful', 'funny'];
     const hasEngagement = buttonTexts.some(t => engagementWords.some(w => t.includes(w)));
-    if (!hasEngagement) {
-      console.warn('[PostToast DIAG] scorePost SKIP: no engagement buttons.',
-        'buttons=' + buttons.length,
-        'buttonTexts=' + JSON.stringify(buttonTexts.slice(0, 8)),
-        'textLen=' + text.length);
-      return;
-    }
+    if (!hasEngagement) return;
 
     const result = PostToastScorer.score(text);
-    console.warn('[PostToast DIAG] scorePost SUCCESS: score=' + result.score, 'textLen=' + text.length);
     this.inject(postElement, result);
   }
 };
