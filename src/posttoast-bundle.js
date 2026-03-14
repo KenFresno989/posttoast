@@ -1911,10 +1911,29 @@ const PostToastBadge = {
     const badge = this.create(result, postElement);
     badge.style.cssText += 'margin-left: 8px; flex-shrink: 0;';
 
+    // Ensure badge is never inside an <a> tag (prevents LinkedIn navigation hijacking)
+    const ensureOutsideLink = (el, parent) => {
+      // Walk up from intended parent — if any ancestor (up to postElement) is an <a>, 
+      // use absolute positioning on the postElement instead
+      let node = parent;
+      while (node && node !== postElement) {
+        if (node.tagName === 'A') {
+          badge.style.cssText = 'position: absolute; top: 8px; right: 48px; z-index: 1000; margin-left: 0;';
+          postElement.style.position = 'relative';
+          postElement.appendChild(badge);
+          return true;
+        }
+        node = node.parentElement;
+      }
+      return false;
+    };
+
     // Strategy 1: Insert next to the Follow button in the header
     const followBtn = postElement.querySelector('button[aria-label*="Follow"], button[aria-label*="follow"]');
     if (followBtn) {
-      followBtn.parentElement.insertBefore(badge, followBtn);
+      if (!ensureOutsideLink(badge, followBtn.parentElement)) {
+        followBtn.parentElement.insertBefore(badge, followBtn);
+      }
       this.markScored(postElement);
       return;
     }
@@ -1926,7 +1945,9 @@ const PostToastBadge = {
       // Find the right side (where Follow/menu lives)
       const meta = actorContainer.querySelector('.feed-shared-actor__meta, .update-components-actor__meta');
       if (meta && meta.parentElement) {
-        meta.parentElement.appendChild(badge);
+        if (!ensureOutsideLink(badge, meta.parentElement)) {
+          meta.parentElement.appendChild(badge);
+        }
         this.markScored(postElement);
         return;
       }
@@ -1938,12 +1959,14 @@ const PostToastBadge = {
       || postElement.querySelector('[class*="actor"]');
 
     if (header) {
-      // Insert inline at the end of the header (same row, not a new row)
-      header.style.cssText += 'display: flex; align-items: center;';
-      header.appendChild(badge);
+      if (!ensureOutsideLink(badge, header)) {
+        // Insert inline at the end of the header (same row, not a new row)
+        header.style.cssText += 'display: flex; align-items: center;';
+        header.appendChild(badge);
+      }
     } else {
-      // Fallback: top-right of the post
-      badge.style.cssText += 'position: absolute; top: 8px; right: 16px; z-index: 10;';
+      // Fallback: top-right of the post (outside any links)
+      badge.style.cssText += 'position: absolute; top: 8px; right: 48px; z-index: 1000;';
       postElement.style.position = 'relative';
       postElement.appendChild(badge);
     }
