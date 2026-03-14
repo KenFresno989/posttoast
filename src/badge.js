@@ -26,9 +26,19 @@ const PostToastBadge = {
 
     badge.addEventListener('click', (e) => {
       e.stopPropagation();
+      e.stopImmediatePropagation();
       e.preventDefault();
       PostToastBreakdown.toggle(result, postElement, badge);
-    });
+    }, true);
+    // Also capture phase to beat LinkedIn's handlers on nested posts
+    badge.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+    }, true);
+    badge.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+    }, true);
 
     return badge;
   },
